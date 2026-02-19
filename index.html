@@ -2,94 +2,141 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Inventory Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .modal-active { overflow: hidden; }
-        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
-        .loading-overlay { background: rgba(255, 255, 255, 0.8); z-index: 100; }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: 700; }
+        .loading-overlay { background: rgba(255, 255, 255, 0.9); z-index: 100; backdrop-filter: blur(4px); }
+        
+        /* Custom scrollbar for mobile cleanliness */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        @media (max-width: 640px) {
+            .mobile-label { display: block; font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-bottom: 1px; }
+            .data-row { flex-direction: column; gap: 0.5rem; padding: 1rem !important; }
+        }
     </style>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800">
+<body class="bg-gray-50 min-h-screen text-gray-800 antialiased">
 
     <!-- Loading State -->
-    <div id="loading-screen" class="fixed inset-0 loading-overlay flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p class="text-gray-600 font-medium">Syncing with Cloud...</p>
-        <p id="loading-status" class="text-xs text-gray-400 mt-2">Initializing connection...</p>
+    <div id="loading-screen" class="fixed inset-0 loading-overlay flex flex-col items-center justify-center p-6 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-gray-900 font-semibold text-lg">Syncing Inventory</p>
+        <p id="loading-status" class="text-sm text-gray-500 mt-2">Connecting to global servers...</p>
     </div>
 
     <!-- Navigation Header -->
-    <header class="bg-white border-b sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-2">
-                    <h1 class="text-xl font-bold text-blue-600">InventoryHub</h1>
-                    <span id="path-badge" class="text-[10px] bg-blue-50 px-2 py-0.5 rounded text-blue-500 font-mono uppercase">Global Public Storage</span>
+    <header class="bg-white border-b sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center sm:h-16 py-3 sm:py-0">
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-blue-600 p-1.5 rounded-lg">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        </div>
+                        <h1 class="text-lg font-bold tracking-tight text-gray-900">InventoryHub</h1>
+                    </div>
+                    <span id="path-badge" class="text-[10px] bg-blue-50 px-2 py-1 rounded-full text-blue-600 font-bold border border-blue-100 uppercase tracking-tighter">Global Cloud</span>
                 </div>
-                <nav class="flex space-x-8">
-                    <button onclick="switchTab('list')" id="tab-list" class="py-4 px-1 text-sm font-medium transition-colors tab-active">Stock List</button>
-                    <button onclick="switchTab('transactions')" id="tab-transactions" class="py-4 px-1 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700">Transactions</button>
+                <nav class="flex w-full sm:w-auto justify-center sm:justify-end mt-2 sm:mt-0">
+                    <button onclick="switchTab('list')" id="tab-list" class="flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all tab-active">Stock</button>
+                    <button onclick="switchTab('transactions')" id="tab-transactions" class="flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all text-gray-400 hover:text-gray-600">History</button>
                 </nav>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         
         <!-- Tab: List View -->
         <div id="view-list">
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                <div class="flex flex-1 gap-2">
-                    <input type="text" id="search-input" oninput="renderStock()" placeholder="Search lots..." class="w-full md:max-w-xs px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    <select id="filter-type" onchange="renderStock()" class="px-4 py-2 border rounded-lg bg-white">
-                        <option value="">All Types</option>
-                    </select>
+            <!-- Mobile Responsive Controls -->
+            <div class="flex flex-col space-y-3 mb-6">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </span>
+                        <input type="text" id="search-input" oninput="renderStock()" placeholder="Search lot or type..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white text-sm shadow-sm">
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <select id="filter-type" onchange="renderStock()" class="flex-1 sm:flex-none px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm shadow-sm focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Types</option>
+                        </select>
+                        <select id="sort-by" onchange="renderStock()" class="flex-1 sm:flex-none px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm shadow-sm focus:ring-2 focus:ring-blue-500">
+                            <option value="purchaseDate">Newest First</option>
+                            <option value="lotName">Name A-Z</option>
+                            <option value="quantity">Stock Level</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <select id="sort-by" onchange="renderStock()" class="px-4 py-2 border rounded-lg bg-white">
-                        <option value="purchaseDate">Date (Newest)</option>
-                        <option value="lotName">Name (A-Z)</option>
-                        <option value="quantity">Quantity (Low-High)</option>
-                    </select>
-                    <button onclick="openModal('buy')" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Buy New Lot</button>
-                </div>
+                <button onclick="openModal('buy')" class="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    New Purchase
+                </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="stock-container">
-                <!-- Cards will be injected here -->
+            <!-- Detailed List Container -->
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[800px] sm:min-w-0">
+                    <thead class="bg-gray-50 border-b border-gray-200 hidden sm:table-header-group">
+                        <tr>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Lot / Type</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Weight & Color</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Cost Details</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">In Stock</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-container" class="divide-y divide-gray-100">
+                        <!-- Detailed list items injected here -->
+                    </tbody>
+                </table>
+                <div id="empty-state" class="hidden py-20 text-center flex flex-col items-center">
+                    <div class="bg-gray-50 p-4 rounded-full mb-4">
+                        <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                    </div>
+                    <p class="text-gray-500 font-medium">No inventory found matching your search.</p>
+                </div>
             </div>
         </div>
 
         <!-- Tab: Transactions View -->
         <div id="view-transactions" class="hidden">
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div class="p-4 border-b bg-gray-50 flex flex-wrap gap-4 items-center justify-between">
-                    <h2 class="font-semibold text-lg">History</h2>
-                    <div class="flex gap-2">
-                        <select id="group-by" onchange="renderTransactions()" class="px-3 py-1 text-sm border rounded bg-white">
-                            <option value="none">No Grouping</option>
-                            <option value="type">Group by Type</option>
-                            <option value="lotName">Group by Lot Name</option>
-                            <option value="action">Group by Action (Buy/Sell)</option>
-                        </select>
-                    </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-4 border-b bg-gray-50 flex flex-wrap gap-3 items-center justify-between">
+                    <h2 class="font-bold text-gray-900">Transaction History</h2>
+                    <select id="group-by" onchange="renderTransactions()" class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white shadow-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="none">Sort: Chronological</option>
+                        <option value="type">Group by Item Type</option>
+                        <option value="lotName">Group by Lot Name</option>
+                        <option value="action">Group by Action (Buy/Sell)</option>
+                    </select>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                    <table class="w-full text-left text-sm min-w-[600px]">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold">
                             <tr>
-                                <th class="px-6 py-3 font-semibold">Date</th>
-                                <th class="px-6 py-3 font-semibold">Action</th>
-                                <th class="px-6 py-3 font-semibold">Lot Name</th>
-                                <th class="px-6 py-3 font-semibold">Quantity</th>
-                                <th class="px-6 py-3 font-semibold">Details</th>
+                                <th class="px-6 py-4">Date & Time</th>
+                                <th class="px-6 py-4 text-center">Action</th>
+                                <th class="px-6 py-4">Lot Name</th>
+                                <th class="px-6 py-4 text-center">Qty</th>
+                                <th class="px-6 py-4">Details</th>
                             </tr>
                         </thead>
-                        <tbody id="transaction-body" class="divide-y">
+                        <tbody id="transaction-body" class="divide-y divide-gray-100">
                             <!-- Rows injected here -->
                         </tbody>
                     </table>
@@ -98,93 +145,106 @@
         </div>
     </main>
 
-    <!-- Modal: Buy / Edit / Sell -->
-    <div id="main-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
-            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 id="modal-title" class="text-xl font-bold">Manage Lot</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    <!-- Modal Template for Buy/Edit/Sell -->
+    <div id="main-modal" class="fixed inset-0 bg-gray-900/60 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50 flex-shrink-0">
+                <h3 id="modal-title" class="text-lg font-bold text-gray-900">Manage Lot</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 bg-white border rounded-full p-1 shadow-sm transition-all">&times;</button>
             </div>
-            <form id="inventory-form" class="p-6">
+            <form id="inventory-form" class="p-6 overflow-y-auto space-y-5">
                 <input type="hidden" id="edit-id">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Lot Name</label>
-                        <input type="text" id="lotName" required class="w-full px-3 py-2 border rounded-md">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Lot Name</label>
+                        <input type="text" id="lotName" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="e.g. Blue Sapphire A1">
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Type</label>
-                        <input type="text" id="type" list="type-suggestions" required class="w-full px-3 py-2 border rounded-md">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Item Type</label>
+                        <input type="text" id="type" list="type-suggestions" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="e.g. Sapphire, Ruby, Diamond">
                         <datalist id="type-suggestions"></datalist>
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Quantity</label>
-                        <input type="number" id="quantity" required min="1" class="w-full px-3 py-2 border rounded-md">
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Quantity</label>
+                            <input type="number" id="quantity" required min="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Weight (ct)</label>
+                            <input type="number" step="0.001" id="weight" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Carats">
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Weight (Carats/unit)</label>
-                        <input type="number" step="0.001" id="weight" class="w-full px-3 py-2 border rounded-md">
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Color / Clarity</label>
+                        <input type="text" id="color" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="e.g. Royal Blue, VVS1">
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Color</label>
-                        <input type="text" id="color" class="w-full px-3 py-2 border rounded-md">
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Currency</label>
+                            <select id="buyingCurrency" class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none">
+                                <option value="USD">USD</option>
+                                <option value="THB">THB</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="JPY">JPY</option>
+                                <option value="HKD">HKD</option>
+                                <option value="SGD">SGD</option>
+                                <option value="CHF">CHF</option>
+                                <option value="AUD">AUD</option>
+                                <option value="CAD">CAD</option>
+                                <option value="CNY">CNY</option>
+                                <option value="INR">INR</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Unit Price</label>
+                            <input type="number" step="0.01" id="buyingPrice" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Currency</label>
-                        <select id="buyingCurrency" class="w-full px-3 py-2 border rounded-md">
-                            <option value="USD">USD - US Dollar</option>
-                            <option value="THB">THB - Thai Baht</option>
-                            <option value="EUR">EUR - Euro</option>
-                            <option value="GBP">GBP - British Pound</option>
-                            <option value="JPY">JPY - Japanese Yen</option>
-                            <option value="HKD">HKD - Hong Kong Dollar</option>
-                            <option value="SGD">SGD - Singapore Dollar</option>
-                            <option value="CHF">CHF - Swiss Franc</option>
-                            <option value="AUD">AUD - Australian Dollar</option>
-                            <option value="CAD">CAD - Canadian Dollar</option>
-                            <option value="CNY">CNY - Chinese Yuan</option>
-                            <option value="INR">INR - Indian Rupee</option>
-                        </select>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Purchase Date</label>
+                        <input type="date" id="purchaseDate" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Unit Price</label>
-                        <input type="number" step="0.01" id="buyingPrice" required class="w-full px-3 py-2 border rounded-md">
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Share %</label>
+                        <input type="number" id="share" value="100" min="1" max="100" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Purchase Date</label>
-                        <input type="date" id="purchaseDate" required class="w-full px-3 py-2 border rounded-md">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Share %</label>
-                        <input type="number" id="share" value="100" class="w-full px-3 py-2 border rounded-md">
-                    </div>
-                    <div class="md:col-span-2 space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Notes</label>
-                        <textarea id="notes" rows="2" class="w-full px-3 py-2 border rounded-md"></textarea>
+
+                    <div class="md:col-span-2 space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Notes / Details</label>
+                        <textarea id="notes" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Any additional info..."></textarea>
                     </div>
                 </div>
-                <div class="mt-6 flex flex-col md:flex-row gap-3">
-                    <button type="submit" id="submit-btn" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">Save Changes</button>
-                    <button type="button" id="delete-btn" onclick="deleteLot()" class="bg-red-50 text-red-600 px-6 py-2 rounded-lg font-bold hover:bg-red-100 transition hidden">Delete Lot</button>
-                    <button type="button" onclick="closeModal()" class="bg-gray-100 text-gray-600 px-6 py-2 rounded-lg font-bold hover:bg-gray-200 transition">Cancel</button>
+
+                <div class="pt-4 flex flex-col-reverse sm:flex-row gap-3">
+                    <button type="button" onclick="closeModal()" class="w-full py-3.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Dismiss</button>
+                    <button type="button" id="delete-btn" onclick="deleteLot()" class="w-full py-3.5 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-all hidden">Delete Permanently</button>
+                    <button type="submit" id="submit-btn" class="w-full py-3.5 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Save Listing</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal: Sell Entry -->
-    <div id="sell-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6">
-            <h3 class="text-xl font-bold mb-4">Sell Item</h3>
-            <div id="sell-item-info" class="text-sm text-gray-600 mb-4"></div>
+    <!-- Sell Modal -->
+    <div id="sell-modal" class="fixed inset-0 bg-gray-900/60 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Confirm Sale</h3>
+            <p id="sell-item-info" class="text-sm text-gray-500 mb-6"></p>
+            
             <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Quantity to Sell</label>
-                    <input type="number" id="sell-qty" min="1" class="w-full px-3 py-2 border rounded-md mt-1">
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity to Deduct</label>
+                    <input type="number" id="sell-qty" min="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="confirmSell()" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 transition">Confirm Sale</button>
-                    <button onclick="closeSellModal()" class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-bold hover:bg-gray-200 transition">Cancel</button>
+                <div class="flex flex-col sm:flex-row gap-2 pt-2">
+                    <button onclick="confirmSell()" class="w-full py-3.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-100">Finish Sale</button>
+                    <button onclick="closeSellModal()" class="w-full py-3.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-gray-100">Cancel</button>
                 </div>
             </div>
         </div>
@@ -196,7 +256,6 @@
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, query, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyB6eM6AdieHc_ZTA5VMqi5BYrWFh4qQ_Ys",
             authDomain: "nawrat-3e6d3.firebaseapp.com",
@@ -212,102 +271,43 @@
         const db = getFirestore(app);
         const appId = "1:106916539773:web:ff4e7d3a6f6d89097cf014"; 
 
-        // Global State
         let currentUser = null;
         let stock = [];
         let transactions = [];
         let sellTargetId = null;
 
-        // Path definitions
         const STOCK_PATH = ['artifacts', appId, 'public', 'data', 'stock'];
         const TRANS_PATH = ['artifacts', appId, 'public', 'data', 'transactions'];
 
-        async function withRetry(fn, maxRetries = 5) {
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    return await fn();
-                } catch (err) {
-                    if (i === maxRetries - 1) throw err;
-                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-                }
-            }
-        }
-
-        function showDetailedError(err) {
-            console.error("Cloud Error:", err);
-            const statusEl = document.getElementById('loading-status');
-            const screen = document.getElementById('loading-screen');
-            
-            let message = "Storage Error";
-            let sub = "Failed to fetch data from cloud.";
-
-            if (err.code === 'permission-denied') {
-                message = "Access Denied";
-                sub = "Security rules are blocking this request. Please ensure Firestore rules allow public access.";
-            } else if (err.code === 'unavailable') {
-                message = "Server Offline";
-                sub = "Unable to reach database. This might be a regional network block or local firewall issue.";
-            }
-
-            screen.innerHTML = `
-                <div class="bg-white p-8 rounded-2xl shadow-xl border border-red-100 text-center max-w-sm">
-                    <div class="text-red-500 text-4xl mb-4">⚠️</div>
-                    <h2 class="text-xl font-bold text-gray-900">${message}</h2>
-                    <p class="text-sm text-gray-500 mt-2">${sub}</p>
-                    <p class="text-[10px] text-gray-400 mt-4 font-mono">${err.message}</p>
-                    <button onclick="location.reload()" class="mt-6 w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Try Reconnect</button>
-                </div>
-            `;
-        }
-
         async function initAuth() {
             try {
-                document.getElementById('loading-status').innerText = "Authenticating anonymously...";
-                await withRetry(() => signInAnonymously(auth));
+                await signInAnonymously(auth);
             } catch (error) {
-                showDetailedError(error);
+                document.getElementById('loading-screen').innerHTML = `<div class="p-8 bg-white rounded-2xl border text-center"><p class="text-red-600 font-bold">Cloud Sync Failed</p><button onclick="location.reload()" class="mt-4 text-blue-600 underline">Reload</button></div>`;
             }
         }
 
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
-            if (user) {
-                document.getElementById('loading-status').innerText = "Establishing secure connection...";
-                setupListeners();
-            }
+            if (user) setupListeners();
         });
 
         function setupListeners() {
-            if (!currentUser) return;
-
-            const stockRef = collection(db, ...STOCK_PATH);
-            const transRef = collection(db, ...TRANS_PATH);
-
-            // Snapshot listeners with explicit error handlers
-            onSnapshot(stockRef, (snapshot) => {
+            onSnapshot(collection(db, ...STOCK_PATH), (snapshot) => {
                 stock = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderStock();
                 updateFilters();
                 document.getElementById('loading-screen').classList.add('hidden');
-            }, (err) => showDetailedError(err));
+            });
 
-            onSnapshot(transRef, (snapshot) => {
+            onSnapshot(collection(db, ...TRANS_PATH), (snapshot) => {
                 transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                 if (!document.getElementById('view-transactions').classList.contains('hidden')) {
                     renderTransactions();
                 }
-            }, (err) => console.warn("Transaction stream error:", err));
+            });
         }
-
-        // UI View Handlers
-        window.switchTab = (tab) => {
-            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
-            document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
-            document.getElementById('tab-list').className = tab === 'list' ? 'py-4 px-1 text-sm font-medium transition-colors tab-active' : 'py-4 px-1 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700';
-            document.getElementById('tab-transactions').className = tab === 'transactions' ? 'py-4 px-1 text-sm font-medium transition-colors tab-active' : 'py-4 px-1 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700';
-            if (tab === 'transactions') renderTransactions();
-        };
 
         window.renderStock = () => {
             const container = document.getElementById('stock-container');
@@ -327,33 +327,65 @@
                 return new Date(b.purchaseDate || 0) - new Date(a.purchaseDate || 0);
             });
 
-            container.innerHTML = filtered.length === 0 ? `<div class="col-span-full py-12 text-center text-gray-500">Empty Inventory</div>` : '';
+            document.getElementById('empty-state').classList.toggle('hidden', filtered.length > 0);
+            container.innerHTML = '';
 
             filtered.forEach(item => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition cursor-pointer relative group";
-                card.onclick = (e) => { if (e.target.tagName !== 'BUTTON') openModal('edit', item.id); };
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase tracking-wider">${item.type || 'Item'}</span>
-                            <h3 class="text-lg font-bold mt-1">${item.lotName || 'Unnamed'}</h3>
+                const row = document.createElement('tr');
+                row.className = "group hover:bg-blue-50/30 transition-colors data-row flex flex-col sm:table-row cursor-pointer";
+                row.onclick = (e) => { if (e.target.closest('button')) return; openModal('edit', item.id); };
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <span class="mobile-label">Lot / Type</span>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-gray-900 leading-tight">${item.lotName || 'Unnamed Lot'}</span>
+                            <span class="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase mt-1 w-fit tracking-wider">${item.type || 'Standard'}</span>
                         </div>
-                        <div class="text-right">
-                            <div class="text-xl font-bold text-gray-900">${item.quantity || 0} <span class="text-xs text-gray-400 font-normal">PCS</span></div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="mobile-label">Weight & Color</span>
+                        <div class="flex flex-col text-sm">
+                            <span class="font-medium text-gray-700">${item.weight || '0'} <span class="text-xs text-gray-400">ct</span></span>
+                            <span class="text-xs text-gray-500">${item.color || 'Unspecified'}</span>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-y-2 text-xs border-t pt-3">
-                        <div class="text-gray-500">Weight: <span class="text-gray-900 font-medium">${item.weight || '-'} ct</span></div>
-                        <div class="text-gray-500">Color: <span class="text-gray-900 font-medium">${item.color || '-'}</span></div>
-                        <div class="text-gray-500">Price: <span class="text-gray-900 font-medium">${item.buyingCurrency || 'USD'} ${Number(item.buyingPrice).toLocaleString()}</span></div>
-                        <div class="text-gray-500">Date: <span class="text-gray-900 font-medium">${item.purchaseDate || '-'}</span></div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t flex justify-end">
-                         <button onclick="openSellModal('${item.id}')" class="bg-green-600 text-white text-xs px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition">Sell</button>
-                    </div>`;
-                container.appendChild(card);
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="mobile-label">Cost</span>
+                        <div class="flex flex-col text-sm">
+                            <span class="font-bold text-gray-800">${item.buyingCurrency || 'USD'} ${Number(item.buyingPrice).toLocaleString()}</span>
+                            <span class="text-[10px] text-gray-400 uppercase font-bold">${item.purchaseDate || '--'}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 sm:text-center">
+                        <span class="mobile-label">Stock</span>
+                        <div class="inline-flex flex-col sm:items-center">
+                            <span class="text-lg font-black ${item.quantity < 5 ? 'text-orange-500' : 'text-gray-900'}">${item.quantity}</span>
+                            <span class="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Units Available</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex sm:justify-end gap-2">
+                            <button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-5 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 shadow-md shadow-green-100 transition-all uppercase tracking-widest">Sale</button>
+                            <button onclick="openModal('edit', '${item.id}')" class="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-400 sm:block hidden">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                container.appendChild(row);
             });
+        };
+
+        // ... Keep existing logic for tabs, updateFilters, Modal management, Save, Delete, Sell ...
+        // (Re-inserting optimized versions of existing handlers)
+
+        window.switchTab = (tab) => {
+            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
+            document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
+            document.getElementById('tab-list').className = tab === 'list' ? 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all tab-active' : 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all text-gray-400 hover:text-gray-600';
+            document.getElementById('tab-transactions').className = tab === 'transactions' ? 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all tab-active' : 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all text-gray-400 hover:text-gray-600';
+            if (tab === 'transactions') renderTransactions();
         };
 
         window.updateFilters = () => {
@@ -369,7 +401,6 @@
             });
         };
 
-        // Modal Handlers
         window.openModal = (mode, id = null) => {
             const modal = document.getElementById('main-modal');
             const form = document.getElementById('inventory-form');
@@ -379,7 +410,7 @@
 
             if (mode === 'edit') {
                 const item = stock.find(i => i.id === id);
-                document.getElementById('modal-title').innerText = "Edit Lot";
+                document.getElementById('modal-title').innerText = "Edit Inventory Item";
                 document.getElementById('delete-btn').classList.remove('hidden');
                 document.getElementById('edit-id').value = id;
                 Object.keys(item).forEach(key => {
@@ -387,7 +418,7 @@
                     if (el) el.value = item[key];
                 });
             } else {
-                document.getElementById('modal-title').innerText = "Buy New Lot";
+                document.getElementById('modal-title').innerText = "Register New Purchase";
                 document.getElementById('delete-btn').classList.add('hidden');
                 document.getElementById('edit-id').value = '';
                 document.getElementById('purchaseDate').valueAsDate = new Date();
@@ -425,24 +456,21 @@
                     logTransaction('BUY', formData, formData.quantity);
                 }
                 closeModal();
-            } catch (err) { console.error("Save error:", err); }
+            } catch (err) { alert("Save error - check connection"); }
         };
 
         window.deleteLot = async () => {
-            if (!currentUser) return;
             const id = document.getElementById('edit-id').value;
-            if (id && confirm('Delete this lot?')) {
-                try {
-                    await deleteDoc(doc(db, ...STOCK_PATH, id));
-                    closeModal();
-                } catch (err) { console.error("Delete error:", err); }
+            if (id && confirm('This will permanently remove this lot from the cloud. Proceed?')) {
+                await deleteDoc(doc(db, ...STOCK_PATH, id));
+                closeModal();
             }
         };
 
         window.openSellModal = (id) => {
             const item = stock.find(i => i.id === id);
             sellTargetId = id;
-            document.getElementById('sell-item-info').innerHTML = `Selling: <strong>${item.lotName}</strong> (Available: ${item.quantity})`;
+            document.getElementById('sell-item-info').innerHTML = `Currently selling items from <span class="font-bold text-gray-900">${item.lotName}</span>. Available stock: <span class="font-bold">${item.quantity}</span>.`;
             document.getElementById('sell-qty').max = item.quantity;
             document.getElementById('sell-qty').value = 1;
             document.getElementById('sell-modal').classList.remove('hidden');
@@ -451,36 +479,30 @@
         window.closeSellModal = () => document.getElementById('sell-modal').classList.add('hidden');
 
         window.confirmSell = async () => {
-            if (!currentUser) return;
             const qty = parseInt(document.getElementById('sell-qty').value);
             const item = stock.find(i => i.id === sellTargetId);
             if (!item || qty <= 0 || qty > item.quantity) return;
 
             const stockDoc = doc(db, ...STOCK_PATH, sellTargetId);
-            try {
-                if (item.quantity === qty) {
-                    await deleteDoc(stockDoc);
-                } else {
-                    await updateDoc(stockDoc, { quantity: item.quantity - qty });
-                }
-                logTransaction('SELL', item, qty);
-                closeSellModal();
-            } catch (err) { console.error("Sale error:", err); }
+            if (item.quantity === qty) {
+                await deleteDoc(stockDoc);
+            } else {
+                await updateDoc(stockDoc, { quantity: item.quantity - qty });
+            }
+            logTransaction('SELL', item, qty);
+            closeSellModal();
         };
 
         async function logTransaction(action, item, qty) {
-            if (!currentUser) return;
-            try {
-                await addDoc(collection(db, ...TRANS_PATH), {
-                    action,
-                    lotName: item.lotName,
-                    type: item.type,
-                    quantity: qty,
-                    unitPrice: `${item.buyingCurrency} ${Number(item.buyingPrice).toLocaleString()}`,
-                    timestamp: serverTimestamp(),
-                    displayDate: new Date().toLocaleString()
-                });
-            } catch (err) { console.error("Log error:", err); }
+            await addDoc(collection(db, ...TRANS_PATH), {
+                action,
+                lotName: item.lotName,
+                type: item.type,
+                quantity: qty,
+                unitPrice: `${item.buyingCurrency} ${Number(item.buyingPrice).toLocaleString()}`,
+                timestamp: serverTimestamp(),
+                displayDate: new Date().toLocaleString()
+            });
         }
 
         window.renderTransactions = () => {
@@ -500,8 +522,8 @@
 
                 for (let group in groups) {
                     const h = document.createElement('tr');
-                    h.className = "bg-gray-100 font-bold";
-                    h.innerHTML = `<td colspan="5" class="px-6 py-2 text-blue-700">${group}</td>`;
+                    h.className = "bg-gray-100/50 font-bold";
+                    h.innerHTML = `<td colspan="5" class="px-6 py-2 text-blue-700 text-[10px] uppercase tracking-widest">${group}</td>`;
                     tbody.appendChild(h);
                     groups[group].forEach(t => appendRow(tbody, t));
                 }
@@ -510,18 +532,17 @@
 
         function appendRow(parent, t) {
             const row = document.createElement('tr');
-            row.className = "hover:bg-gray-50";
-            const color = t.action === 'BUY' ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50';
+            row.className = "hover:bg-gray-50 transition-colors";
+            const color = t.action === 'BUY' ? 'text-blue-600 bg-blue-50 border-blue-100' : 'text-green-600 bg-green-50 border-green-100';
             row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-gray-500 text-xs">${t.displayDate || '...'}</td>
-                <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 rounded text-[10px] font-bold ${color}">${t.action}</span></td>
-                <td class="px-6 py-4 font-medium text-gray-900">${t.lotName}</td>
-                <td class="px-6 py-4 text-gray-700 font-bold">${t.quantity}</td>
-                <td class="px-6 py-4 text-gray-500 italic text-xs">${t.unitPrice}</td>`;
+                <td class="px-6 py-4 whitespace-nowrap text-gray-500 text-[10px] font-mono">${t.displayDate || '...'}</td>
+                <td class="px-6 py-4 text-center"><span class="px-2 py-0.5 rounded-full text-[9px] font-black border ${color}">${t.action}</span></td>
+                <td class="px-6 py-4 font-bold text-gray-800">${t.lotName}</td>
+                <td class="px-6 py-4 text-center font-black">${t.quantity}</td>
+                <td class="px-6 py-4 text-gray-400 italic text-xs">${t.unitPrice}</td>`;
             parent.appendChild(row);
         }
 
-        // Initialize App
         initAuth();
     </script>
 </body>
