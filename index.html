@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Inventory Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/inventory-system/sw.js');
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -12,21 +17,38 @@
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: 700; }
         .loading-overlay { background: rgba(255, 255, 255, 0.9); z-index: 100; backdrop-filter: blur(4px); }
         
-        /* Custom scrollbar for mobile cleanliness */
+        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
+        /* Fix: Hide mobile labels on desktop, show only on small screens */
+        .mobile-label { display: none; }
+
         @media (max-width: 640px) {
-            .mobile-label { display: block; font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-bottom: 1px; }
-            .data-row { flex-direction: column; gap: 0.5rem; padding: 1rem !important; }
+            .mobile-label { 
+                display: block; 
+                font-size: 0.65rem; 
+                color: #94a3b8; 
+                font-weight: 700; 
+                text-transform: uppercase; 
+                margin-bottom: 2px;
+                letter-spacing: 0.025em;
+            }
+            /* Stack the row into a card-like layout on mobile */
+            .data-row { 
+                display: flex !important;
+                flex-direction: column; 
+                gap: 0.75rem; 
+                padding: 1.25rem !important; 
+            }
+            .data-cell {
+                padding: 0 !important;
+                border: none !important;
+            }
+            .hide-on-mobile { display: none !important; }
         }
     </style>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/inventory-system/sw.js');
-        }
-    </script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800 antialiased">
 
@@ -48,7 +70,7 @@
                         </div>
                         <h1 class="text-lg font-bold tracking-tight text-gray-900">InventoryHub</h1>
                     </div>
-                    <span id="path-badge" class="text-[10px] bg-blue-50 px-2 py-1 rounded-full text-blue-600 font-bold border border-blue-100 uppercase tracking-tighter">Global Cloud</span>
+                    <span class="text-[10px] bg-blue-50 px-2 py-1 rounded-full text-blue-600 font-bold border border-blue-100 uppercase tracking-tighter">Global Cloud</span>
                 </div>
                 <nav class="flex w-full sm:w-auto justify-center sm:justify-end mt-2 sm:mt-0">
                     <button onclick="switchTab('list')" id="tab-list" class="flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all tab-active">Stock</button>
@@ -62,7 +84,6 @@
         
         <!-- Tab: List View -->
         <div id="view-list">
-            <!-- Mobile Responsive Controls -->
             <div class="flex flex-col space-y-3 mb-6">
                 <div class="flex flex-col sm:flex-row gap-3">
                     <div class="relative flex-1">
@@ -88,32 +109,30 @@
                 </button>
             </div>
 
-            <!-- Detailed List Container -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[800px] sm:min-w-0">
-                    <thead class="bg-gray-50 border-b border-gray-200 hidden sm:table-header-group">
-                        <tr>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Lot / Type</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Weight & Color</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Cost Details</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">In Stock</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stock-container" class="divide-y divide-gray-100">
-                        <!-- Detailed list items injected here -->
-                    </tbody>
-                </table>
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 border-b border-gray-200 hide-on-mobile">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Lot / Type</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Weight & Color</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Cost Details</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Stock</th>
+                                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stock-container" class="divide-y divide-gray-100">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
                 <div id="empty-state" class="hidden py-20 text-center flex flex-col items-center">
-                    <div class="bg-gray-50 p-4 rounded-full mb-4">
-                        <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                    </div>
-                    <p class="text-gray-500 font-medium">No inventory found matching your search.</p>
+                    <p class="text-gray-500 font-medium">No inventory items found.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Tab: Transactions View -->
+        <!-- Tab: History View -->
         <div id="view-transactions" class="hidden">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="p-4 border-b bg-gray-50 flex flex-wrap gap-3 items-center justify-between">
@@ -122,110 +141,89 @@
                         <option value="none">Sort: Chronological</option>
                         <option value="type">Group by Item Type</option>
                         <option value="lotName">Group by Lot Name</option>
-                        <option value="action">Group by Action (Buy/Sell)</option>
+                        <option value="action">Group by Action</option>
                     </select>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm min-w-[600px]">
                         <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold">
                             <tr>
-                                <th class="px-6 py-4">Date & Time</th>
+                                <th class="px-6 py-4">Date</th>
                                 <th class="px-6 py-4 text-center">Action</th>
                                 <th class="px-6 py-4">Lot Name</th>
                                 <th class="px-6 py-4 text-center">Qty</th>
-                                <th class="px-6 py-4">Details</th>
+                                <th class="px-6 py-4">Price Info</th>
                             </tr>
                         </thead>
-                        <tbody id="transaction-body" class="divide-y divide-gray-100">
-                            <!-- Rows injected here -->
-                        </tbody>
+                        <tbody id="transaction-body" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modal Template for Buy/Edit/Sell -->
+    <!-- Modal: Buy / Edit -->
     <div id="main-modal" class="fixed inset-0 bg-gray-900/60 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50 flex-shrink-0">
-                <h3 id="modal-title" class="text-lg font-bold text-gray-900">Manage Lot</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 bg-white border rounded-full p-1 shadow-sm transition-all">&times;</button>
+        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 id="modal-title" class="text-lg font-bold text-gray-900">Manage Item</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 bg-white border rounded-full p-1 shadow-sm">&times;</button>
             </div>
-            <form id="inventory-form" class="p-6 overflow-y-auto space-y-5">
+            <form id="inventory-form" class="p-6 overflow-y-auto space-y-4">
                 <input type="hidden" id="edit-id">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Lot Name</label>
-                        <input type="text" id="lotName" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="e.g. Blue Sapphire A1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Lot Name</label>
+                        <input type="text" id="lotName" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Item Type</label>
-                        <input type="text" id="type" list="type-suggestions" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="e.g. Sapphire, Ruby, Diamond">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Item Type</label>
+                        <input type="text" id="type" list="type-suggestions" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
                         <datalist id="type-suggestions"></datalist>
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Quantity</label>
-                            <input type="number" id="quantity" required min="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold uppercase text-gray-400">Quantity</label>
+                            <input type="number" id="quantity" required min="1" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Weight (ct)</label>
-                            <input type="number" step="0.001" id="weight" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Carats">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold uppercase text-gray-400">Weight (ct)</label>
+                            <input type="number" step="0.001" id="weight" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
                         </div>
                     </div>
-
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Color / Clarity</label>
-                        <input type="text" id="color" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="e.g. Royal Blue, VVS1">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Color / Clarity</label>
+                        <input type="text" id="color" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
                     </div>
-
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Currency</label>
-                            <select id="buyingCurrency" class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none">
-                                <option value="USD">USD</option>
-                                <option value="THB">THB</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                                <option value="JPY">JPY</option>
-                                <option value="HKD">HKD</option>
-                                <option value="SGD">SGD</option>
-                                <option value="CHF">CHF</option>
-                                <option value="AUD">AUD</option>
-                                <option value="CAD">CAD</option>
-                                <option value="CNY">CNY</option>
-                                <option value="INR">INR</option>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold uppercase text-gray-400">Currency</label>
+                            <select id="buyingCurrency" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-white">
+                                <option value="USD">USD</option><option value="THB">THB</option><option value="EUR">EUR</option>
                             </select>
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Unit Price</label>
-                            <input type="number" step="0.01" id="buyingPrice" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold uppercase text-gray-400">Unit Price</label>
+                            <input type="number" step="0.01" id="buyingPrice" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
                         </div>
                     </div>
-
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Purchase Date</label>
-                        <input type="date" id="purchaseDate" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Date</label>
+                        <input type="date" id="purchaseDate" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
                     </div>
-
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Share %</label>
-                        <input type="number" id="share" value="100" min="1" max="100" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Share %</label>
+                        <input type="number" id="share" value="100" min="1" max="100" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
                     </div>
-
-                    <div class="md:col-span-2 space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Notes / Details</label>
-                        <textarea id="notes" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Any additional info..."></textarea>
+                    <div class="md:col-span-2 space-y-1">
+                        <label class="text-[10px] font-bold uppercase text-gray-400">Notes</label>
+                        <textarea id="notes" rows="2" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl"></textarea>
                     </div>
                 </div>
-
                 <div class="pt-4 flex flex-col-reverse sm:flex-row gap-3">
-                    <button type="button" onclick="closeModal()" class="w-full py-3.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Dismiss</button>
-                    <button type="button" id="delete-btn" onclick="deleteLot()" class="w-full py-3.5 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-all hidden">Delete Permanently</button>
-                    <button type="submit" id="submit-btn" class="w-full py-3.5 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Save Listing</button>
+                    <button type="button" onclick="closeModal()" class="w-full py-3 text-gray-500 font-bold">Cancel</button>
+                    <button type="button" id="delete-btn" onclick="deleteLot()" class="w-full py-3 text-red-600 bg-red-50 rounded-xl font-bold hidden">Delete</button>
+                    <button type="submit" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-100">Save</button>
                 </div>
             </form>
         </div>
@@ -233,24 +231,22 @@
 
     <!-- Sell Modal -->
     <div id="sell-modal" class="fixed inset-0 bg-gray-900/60 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Confirm Sale</h3>
+        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-sm overflow-hidden p-6">
+            <h3 class="text-xl font-bold mb-2">Confirm Sale</h3>
             <p id="sell-item-info" class="text-sm text-gray-500 mb-6"></p>
-            
             <div class="space-y-4">
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity to Deduct</label>
-                    <input type="number" id="sell-qty" min="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Quantity Sold</label>
+                    <input type="number" id="sell-qty" min="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="flex flex-col sm:flex-row gap-2 pt-2">
-                    <button onclick="confirmSell()" class="w-full py-3.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-100">Finish Sale</button>
-                    <button onclick="closeSellModal()" class="w-full py-3.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-gray-100">Cancel</button>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button onclick="confirmSell()" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold">Deduct Stock</button>
+                    <button onclick="closeSellModal()" class="w-full py-3 bg-gray-50 text-gray-600 rounded-xl font-bold">Cancel</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -262,8 +258,7 @@
             projectId: "nawrat-3e6d3",
             storageBucket: "nawrat-3e6d3.firebasestorage.app",
             messagingSenderId: "106916539773",
-            appId: "1:106916539773:web:ff4e7d3a6f6d89097cf014",
-            measurementId: "G-199YSN6DFM"
+            appId: "1:106916539773:web:ff4e7d3a6f6d89097cf014"
         };
         
         const app = initializeApp(firebaseConfig);
@@ -271,7 +266,6 @@
         const db = getFirestore(app);
         const appId = "1:106916539773:web:ff4e7d3a6f6d89097cf014"; 
 
-        let currentUser = null;
         let stock = [];
         let transactions = [];
         let sellTargetId = null;
@@ -279,35 +273,23 @@
         const STOCK_PATH = ['artifacts', appId, 'public', 'data', 'stock'];
         const TRANS_PATH = ['artifacts', appId, 'public', 'data', 'transactions'];
 
-        async function initAuth() {
-            try {
-                await signInAnonymously(auth);
-            } catch (error) {
-                document.getElementById('loading-screen').innerHTML = `<div class="p-8 bg-white rounded-2xl border text-center"><p class="text-red-600 font-bold">Cloud Sync Failed</p><button onclick="location.reload()" class="mt-4 text-blue-600 underline">Reload</button></div>`;
-            }
-        }
-
         onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) setupListeners();
-        });
-
-        function setupListeners() {
-            onSnapshot(collection(db, ...STOCK_PATH), (snapshot) => {
-                stock = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderStock();
-                updateFilters();
-                document.getElementById('loading-screen').classList.add('hidden');
-            });
-
-            onSnapshot(collection(db, ...TRANS_PATH), (snapshot) => {
-                transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-                if (!document.getElementById('view-transactions').classList.contains('hidden')) {
+            if (user) {
+                onSnapshot(collection(db, ...STOCK_PATH), (s) => {
+                    stock = s.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderStock();
+                    updateFilters();
+                    document.getElementById('loading-screen').classList.add('hidden');
+                });
+                onSnapshot(collection(db, ...TRANS_PATH), (s) => {
+                    transactions = s.docs.map(d => ({ id: d.id, ...d.data() }));
+                    transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                     renderTransactions();
-                }
-            });
-        }
+                });
+            } else {
+                signInAnonymously(auth);
+            }
+        });
 
         window.renderStock = () => {
             const container = document.getElementById('stock-container');
@@ -332,93 +314,81 @@
 
             filtered.forEach(item => {
                 const row = document.createElement('tr');
-                row.className = "group hover:bg-blue-50/30 transition-colors data-row flex flex-col sm:table-row cursor-pointer";
+                row.className = "group hover:bg-blue-50/30 transition-colors data-row cursor-pointer";
                 row.onclick = (e) => { if (e.target.closest('button')) return; openModal('edit', item.id); };
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 data-cell">
                         <span class="mobile-label">Lot / Type</span>
                         <div class="flex flex-col">
-                            <span class="font-bold text-gray-900 leading-tight">${item.lotName || 'Unnamed Lot'}</span>
-                            <span class="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase mt-1 w-fit tracking-wider">${item.type || 'Standard'}</span>
+                            <span class="font-bold text-gray-900 leading-tight">${item.lotName || 'Unnamed'}</span>
+                            <span class="text-[9px] font-extrabold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded uppercase mt-1 w-fit tracking-wider">${item.type || 'Standard'}</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 data-cell">
                         <span class="mobile-label">Weight & Color</span>
                         <div class="flex flex-col text-sm">
                             <span class="font-medium text-gray-700">${item.weight || '0'} <span class="text-xs text-gray-400">ct</span></span>
-                            <span class="text-xs text-gray-500">${item.color || 'Unspecified'}</span>
+                            <span class="text-xs text-gray-500">${item.color || 'N/A'}</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 data-cell">
                         <span class="mobile-label">Cost</span>
                         <div class="flex flex-col text-sm">
                             <span class="font-bold text-gray-800">${item.buyingCurrency || 'USD'} ${Number(item.buyingPrice).toLocaleString()}</span>
-                            <span class="text-[10px] text-gray-400 uppercase font-bold">${item.purchaseDate || '--'}</span>
+                            <span class="text-[10px] text-gray-400 font-bold">${item.purchaseDate || '--'}</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4 sm:text-center">
+                    <td class="px-6 py-4 data-cell sm:text-center">
                         <span class="mobile-label">Stock</span>
                         <div class="inline-flex flex-col sm:items-center">
-                            <span class="text-lg font-black ${item.quantity < 5 ? 'text-orange-500' : 'text-gray-900'}">${item.quantity}</span>
-                            <span class="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Units Available</span>
+                            <span class="text-lg font-black text-gray-900">${item.quantity}</span>
+                            <span class="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Units</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-6 py-4 data-cell text-right">
                         <div class="flex sm:justify-end gap-2">
-                            <button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-5 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 shadow-md shadow-green-100 transition-all uppercase tracking-widest">Sale</button>
-                            <button onclick="openModal('edit', '${item.id}')" class="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-400 sm:block hidden">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            </button>
+                            <button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white text-[10px] font-bold rounded-lg uppercase tracking-widest">Sale</button>
+                            <button onclick="openModal('edit', '${item.id}')" class="p-2 bg-gray-50 text-gray-400 rounded-lg sm:block hidden"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                         </div>
-                    </td>
-                `;
+                    </td>`;
                 container.appendChild(row);
             });
-        };
-
-        // ... Keep existing logic for tabs, updateFilters, Modal management, Save, Delete, Sell ...
-        // (Re-inserting optimized versions of existing handlers)
-
-        window.switchTab = (tab) => {
-            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
-            document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
-            document.getElementById('tab-list').className = tab === 'list' ? 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all tab-active' : 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all text-gray-400 hover:text-gray-600';
-            document.getElementById('tab-transactions').className = tab === 'transactions' ? 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all tab-active' : 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all text-gray-400 hover:text-gray-600';
-            if (tab === 'transactions') renderTransactions();
         };
 
         window.updateFilters = () => {
             const types = [...new Set(stock.map(i => i.type).filter(Boolean))];
             const filterSelect = document.getElementById('filter-type');
             const dataList = document.getElementById('type-suggestions');
-            const currentFilter = filterSelect.value;
+            const current = filterSelect.value;
             filterSelect.innerHTML = '<option value="">All Types</option>';
             dataList.innerHTML = '';
             types.forEach(t => {
-                filterSelect.innerHTML += `<option value="${t}" ${t === currentFilter ? 'selected' : ''}>${t}</option>`;
+                filterSelect.innerHTML += `<option value="${t}" ${t === current ? 'selected' : ''}>${t}</option>`;
                 dataList.innerHTML += `<option value="${t}">`;
             });
         };
 
+        window.switchTab = (tab) => {
+            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
+            document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
+            document.getElementById('tab-list').className = tab === 'list' ? 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all tab-active' : 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all text-gray-400 hover:text-gray-600';
+            document.getElementById('tab-transactions').className = tab === 'transactions' ? 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all tab-active' : 'flex-1 sm:flex-none py-3 px-6 text-sm font-medium transition-all text-gray-400 hover:text-gray-600';
+        };
+
         window.openModal = (mode, id = null) => {
-            const modal = document.getElementById('main-modal');
             const form = document.getElementById('inventory-form');
             form.reset();
-            modal.classList.remove('hidden');
+            document.getElementById('main-modal').classList.remove('hidden');
             document.body.classList.add('modal-active');
-
             if (mode === 'edit') {
                 const item = stock.find(i => i.id === id);
-                document.getElementById('modal-title').innerText = "Edit Inventory Item";
+                document.getElementById('modal-title').innerText = "Edit Inventory";
                 document.getElementById('delete-btn').classList.remove('hidden');
                 document.getElementById('edit-id').value = id;
-                Object.keys(item).forEach(key => {
-                    const el = document.getElementById(key);
-                    if (el) el.value = item[key];
-                });
+                Object.keys(item).forEach(key => { if (document.getElementById(key)) document.getElementById(key).value = item[key]; });
             } else {
-                document.getElementById('modal-title').innerText = "Register New Purchase";
+                document.getElementById('modal-title').innerText = "New Purchase";
                 document.getElementById('delete-btn').classList.add('hidden');
                 document.getElementById('edit-id').value = '';
                 document.getElementById('purchaseDate').valueAsDate = new Date();
@@ -432,9 +402,8 @@
 
         document.getElementById('inventory-form').onsubmit = async (e) => {
             e.preventDefault();
-            if (!currentUser) return;
             const id = document.getElementById('edit-id').value;
-            const formData = {
+            const data = {
                 lotName: document.getElementById('lotName').value,
                 type: document.getElementById('type').value,
                 quantity: parseInt(document.getElementById('quantity').value),
@@ -447,21 +416,17 @@
                 notes: document.getElementById('notes').value,
                 updatedAt: serverTimestamp()
             };
-
-            try {
-                if (id) {
-                    await updateDoc(doc(db, ...STOCK_PATH, id), formData);
-                } else {
-                    await addDoc(collection(db, ...STOCK_PATH), formData);
-                    logTransaction('BUY', formData, formData.quantity);
-                }
-                closeModal();
-            } catch (err) { alert("Save error - check connection"); }
+            if (id) await updateDoc(doc(db, ...STOCK_PATH, id), data);
+            else {
+                await addDoc(collection(db, ...STOCK_PATH), data);
+                logTransaction('BUY', data, data.quantity);
+            }
+            closeModal();
         };
 
         window.deleteLot = async () => {
             const id = document.getElementById('edit-id').value;
-            if (id && confirm('This will permanently remove this lot from the cloud. Proceed?')) {
+            if (id && confirm('Delete item?')) {
                 await deleteDoc(doc(db, ...STOCK_PATH, id));
                 closeModal();
             }
@@ -470,7 +435,7 @@
         window.openSellModal = (id) => {
             const item = stock.find(i => i.id === id);
             sellTargetId = id;
-            document.getElementById('sell-item-info').innerHTML = `Currently selling items from <span class="font-bold text-gray-900">${item.lotName}</span>. Available stock: <span class="font-bold">${item.quantity}</span>.`;
+            document.getElementById('sell-item-info').innerText = `Selling ${item.lotName} (Stock: ${item.quantity})`;
             document.getElementById('sell-qty').max = item.quantity;
             document.getElementById('sell-qty').value = 1;
             document.getElementById('sell-modal').classList.remove('hidden');
@@ -482,68 +447,37 @@
             const qty = parseInt(document.getElementById('sell-qty').value);
             const item = stock.find(i => i.id === sellTargetId);
             if (!item || qty <= 0 || qty > item.quantity) return;
-
             const stockDoc = doc(db, ...STOCK_PATH, sellTargetId);
-            if (item.quantity === qty) {
-                await deleteDoc(stockDoc);
-            } else {
-                await updateDoc(stockDoc, { quantity: item.quantity - qty });
-            }
+            if (item.quantity === qty) await deleteDoc(stockDoc);
+            else await updateDoc(stockDoc, { quantity: item.quantity - qty });
             logTransaction('SELL', item, qty);
             closeSellModal();
         };
 
         async function logTransaction(action, item, qty) {
             await addDoc(collection(db, ...TRANS_PATH), {
-                action,
-                lotName: item.lotName,
-                type: item.type,
-                quantity: qty,
-                unitPrice: `${item.buyingCurrency} ${Number(item.buyingPrice).toLocaleString()}`,
-                timestamp: serverTimestamp(),
-                displayDate: new Date().toLocaleString()
+                action, lotName: item.lotName, type: item.type, quantity: qty,
+                unitPrice: `${item.buyingCurrency} ${item.buyingPrice}`,
+                timestamp: serverTimestamp(), displayDate: new Date().toLocaleString()
             });
         }
 
-        window.renderTransactions = () => {
+        function renderTransactions() {
             const tbody = document.getElementById('transaction-body');
-            const groupBy = document.getElementById('group-by').value;
             tbody.innerHTML = '';
-
-            if (groupBy === 'none') {
-                transactions.forEach(t => appendRow(tbody, t));
-            } else {
-                const groups = transactions.reduce((acc, t) => {
-                    const key = t[groupBy] || "Uncategorized";
-                    if (!acc[key]) acc[key] = [];
-                    acc[key].push(t);
-                    return acc;
-                }, {});
-
-                for (let group in groups) {
-                    const h = document.createElement('tr');
-                    h.className = "bg-gray-100/50 font-bold";
-                    h.innerHTML = `<td colspan="5" class="px-6 py-2 text-blue-700 text-[10px] uppercase tracking-widest">${group}</td>`;
-                    tbody.appendChild(h);
-                    groups[group].forEach(t => appendRow(tbody, t));
-                }
-            }
-        };
-
-        function appendRow(parent, t) {
-            const row = document.createElement('tr');
-            row.className = "hover:bg-gray-50 transition-colors";
-            const color = t.action === 'BUY' ? 'text-blue-600 bg-blue-50 border-blue-100' : 'text-green-600 bg-green-50 border-green-100';
-            row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-gray-500 text-[10px] font-mono">${t.displayDate || '...'}</td>
-                <td class="px-6 py-4 text-center"><span class="px-2 py-0.5 rounded-full text-[9px] font-black border ${color}">${t.action}</span></td>
-                <td class="px-6 py-4 font-bold text-gray-800">${t.lotName}</td>
-                <td class="px-6 py-4 text-center font-black">${t.quantity}</td>
-                <td class="px-6 py-4 text-gray-400 italic text-xs">${t.unitPrice}</td>`;
-            parent.appendChild(row);
+            transactions.forEach(t => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-50 text-[11px]";
+                const actionClass = t.action === 'BUY' ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-gray-400">${t.displayDate || ''}</td>
+                    <td class="px-6 py-4 text-center"><span class="px-2 py-0.5 rounded-full font-bold ${actionClass}">${t.action}</span></td>
+                    <td class="px-6 py-4 font-bold text-gray-800">${t.lotName}</td>
+                    <td class="px-6 py-4 text-center font-black">${t.quantity}</td>
+                    <td class="px-6 py-4 text-gray-400 italic">${t.unitPrice}</td>`;
+                tbody.appendChild(row);
+            });
         }
-
-        initAuth();
     </script>
 </body>
 </html>
