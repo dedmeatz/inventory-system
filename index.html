@@ -19,6 +19,7 @@
     <div id="loading-screen" class="fixed inset-0 loading-overlay flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
         <p class="text-gray-600 font-medium">Syncing with Cloud...</p>
+        <p id="loading-status" class="text-xs text-gray-400 mt-2">Initializing connection...</p>
     </div>
 
     <!-- Navigation Header -->
@@ -27,7 +28,7 @@
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-2">
                     <h1 class="text-xl font-bold text-blue-600">InventoryHub</h1>
-                    <span id="path-badge" class="text-[10px] bg-blue-50 px-2 py-0.5 rounded text-blue-500 font-mono">Public Storage</span>
+                    <span id="path-badge" class="text-[10px] bg-blue-50 px-2 py-0.5 rounded text-blue-500 font-mono uppercase">Global Public Storage</span>
                 </div>
                 <nav class="flex space-x-8">
                     <button onclick="switchTab('list')" id="tab-list" class="py-4 px-1 text-sm font-medium transition-colors tab-active">Stock List</button>
@@ -121,8 +122,8 @@
                         <input type="number" id="quantity" required min="1" class="w-full px-3 py-2 border rounded-md">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs font-semibold uppercase text-gray-500">Weight (kg/unit)</label>
-                        <input type="number" step="0.01" id="weight" class="w-full px-3 py-2 border rounded-md">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Weight (Carats/unit)</label>
+                        <input type="number" step="0.001" id="weight" class="w-full px-3 py-2 border rounded-md">
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-semibold uppercase text-gray-500">Color</label>
@@ -131,10 +132,18 @@
                     <div class="space-y-1">
                         <label class="text-xs font-semibold uppercase text-gray-500">Currency</label>
                         <select id="buyingCurrency" class="w-full px-3 py-2 border rounded-md">
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
-                            <option value="JPY">JPY</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="THB">THB - Thai Baht</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="JPY">JPY - Japanese Yen</option>
+                            <option value="HKD">HKD - Hong Kong Dollar</option>
+                            <option value="SGD">SGD - Singapore Dollar</option>
+                            <option value="CHF">CHF - Swiss Franc</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                            <option value="CNY">CNY - Chinese Yuan</option>
+                            <option value="INR">INR - Indian Rupee</option>
                         </select>
                     </div>
                     <div class="space-y-1">
@@ -187,7 +196,7 @@
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, query, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration - DO NOT CHANGE
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyB6eM6AdieHc_ZTA5VMqi5BYrWFh4qQ_Ys",
             authDomain: "nawrat-3e6d3.firebaseapp.com",
@@ -209,11 +218,10 @@
         let transactions = [];
         let sellTargetId = null;
 
-        // Static Path Rule 1: /artifacts/{appId}/public/data/{collectionName} (5 segments = Collection)
+        // Path definitions
         const STOCK_PATH = ['artifacts', appId, 'public', 'data', 'stock'];
         const TRANS_PATH = ['artifacts', appId, 'public', 'data', 'transactions'];
 
-        // Exponential backoff helper for API calls
         async function withRetry(fn, maxRetries = 5) {
             for (let i = 0; i < maxRetries; i++) {
                 try {
@@ -225,56 +233,74 @@
             }
         }
 
-        // --- AUTHENTICATION ---
+        function showDetailedError(err) {
+            console.error("Cloud Error:", err);
+            const statusEl = document.getElementById('loading-status');
+            const screen = document.getElementById('loading-screen');
+            
+            let message = "Storage Error";
+            let sub = "Failed to fetch data from cloud.";
+
+            if (err.code === 'permission-denied') {
+                message = "Access Denied";
+                sub = "Security rules are blocking this request. Please ensure Firestore rules allow public access.";
+            } else if (err.code === 'unavailable') {
+                message = "Server Offline";
+                sub = "Unable to reach database. This might be a regional network block or local firewall issue.";
+            }
+
+            screen.innerHTML = `
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-red-100 text-center max-w-sm">
+                    <div class="text-red-500 text-4xl mb-4">⚠️</div>
+                    <h2 class="text-xl font-bold text-gray-900">${message}</h2>
+                    <p class="text-sm text-gray-500 mt-2">${sub}</p>
+                    <p class="text-[10px] text-gray-400 mt-4 font-mono">${err.message}</p>
+                    <button onclick="location.reload()" class="mt-6 w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Try Reconnect</button>
+                </div>
+            `;
+        }
+
         async function initAuth() {
             try {
-                // Rule 3: Auth before Queries
+                document.getElementById('loading-status').innerText = "Authenticating anonymously...";
                 await withRetry(() => signInAnonymously(auth));
             } catch (error) {
-                console.error("Auth error:", error);
-                document.getElementById('loading-screen').innerHTML = `
-                    <div class="p-6 bg-white shadow-xl rounded-xl text-center max-w-sm mx-auto">
-                        <p class="text-red-600 font-bold mb-2">Auth Failed</p>
-                        <p class="text-gray-500 text-sm">Please refresh the page.</p>
-                    </div>`;
+                showDetailedError(error);
             }
         }
 
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
+                document.getElementById('loading-status').innerText = "Establishing secure connection...";
                 setupListeners();
             }
         });
 
-        // --- FIRESTORE LISTENERS ---
         function setupListeners() {
             if (!currentUser) return;
 
-            // Listening to static stock path
             const stockRef = collection(db, ...STOCK_PATH);
+            const transRef = collection(db, ...TRANS_PATH);
+
+            // Snapshot listeners with explicit error handlers
             onSnapshot(stockRef, (snapshot) => {
                 stock = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderStock();
                 updateFilters();
                 document.getElementById('loading-screen').classList.add('hidden');
-            }, (err) => {
-                console.error("Stock Listener error:", err);
-                document.getElementById('loading-screen').innerHTML = `<p class="text-red-500 px-4 text-center">Cloud Storage Error. Please check Firestore permissions for public paths.</p>`;
-            });
+            }, (err) => showDetailedError(err));
 
-            // Listening to static transactions path
-            const transRef = collection(db, ...TRANS_PATH);
             onSnapshot(transRef, (snapshot) => {
                 transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                 if (!document.getElementById('view-transactions').classList.contains('hidden')) {
                     renderTransactions();
                 }
-            }, (err) => console.error("Trans Listener error:", err));
+            }, (err) => console.warn("Transaction stream error:", err));
         }
 
-        // --- UI & LOGIC ---
+        // UI View Handlers
         window.switchTab = (tab) => {
             document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
             document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
@@ -318,9 +344,9 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-y-2 text-xs border-t pt-3">
-                        <div class="text-gray-500">Weight: <span class="text-gray-900 font-medium">${item.weight || '-'} kg</span></div>
+                        <div class="text-gray-500">Weight: <span class="text-gray-900 font-medium">${item.weight || '-'} ct</span></div>
                         <div class="text-gray-500">Color: <span class="text-gray-900 font-medium">${item.color || '-'}</span></div>
-                        <div class="text-gray-500">Price: <span class="text-gray-900 font-medium">${item.buyingCurrency || 'USD'} ${item.buyingPrice || 0}</span></div>
+                        <div class="text-gray-500">Price: <span class="text-gray-900 font-medium">${item.buyingCurrency || 'USD'} ${Number(item.buyingPrice).toLocaleString()}</span></div>
                         <div class="text-gray-500">Date: <span class="text-gray-900 font-medium">${item.purchaseDate || '-'}</span></div>
                     </div>
                     <div class="mt-4 pt-3 border-t flex justify-end">
@@ -343,7 +369,7 @@
             });
         };
 
-        // --- CRUD ---
+        // Modal Handlers
         window.openModal = (mode, id = null) => {
             const modal = document.getElementById('main-modal');
             const form = document.getElementById('inventory-form');
@@ -391,13 +417,11 @@
                 updatedAt: serverTimestamp()
             };
 
-            const stockCol = collection(db, ...STOCK_PATH);
-            
             try {
                 if (id) {
                     await updateDoc(doc(db, ...STOCK_PATH, id), formData);
                 } else {
-                    await addDoc(stockCol, formData);
+                    await addDoc(collection(db, ...STOCK_PATH), formData);
                     logTransaction('BUY', formData, formData.quantity);
                 }
                 closeModal();
@@ -452,7 +476,7 @@
                     lotName: item.lotName,
                     type: item.type,
                     quantity: qty,
-                    unitPrice: `${item.buyingCurrency} ${item.buyingPrice}`,
+                    unitPrice: `${item.buyingCurrency} ${Number(item.buyingPrice).toLocaleString()}`,
                     timestamp: serverTimestamp(),
                     displayDate: new Date().toLocaleString()
                 });
@@ -492,11 +516,12 @@
                 <td class="px-6 py-4 whitespace-nowrap text-gray-500 text-xs">${t.displayDate || '...'}</td>
                 <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 rounded text-[10px] font-bold ${color}">${t.action}</span></td>
                 <td class="px-6 py-4 font-medium text-gray-900">${t.lotName}</td>
-                <td class="px-6 py-4 text-gray-700">${t.quantity}</td>
+                <td class="px-6 py-4 text-gray-700 font-bold">${t.quantity}</td>
                 <td class="px-6 py-4 text-gray-500 italic text-xs">${t.unitPrice}</td>`;
             parent.appendChild(row);
         }
 
+        // Initialize App
         initAuth();
     </script>
 </body>
