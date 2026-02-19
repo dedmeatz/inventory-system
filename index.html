@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .modal-active { overflow: hidden; }
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+        .loading-overlay { background: rgba(255, 255, 255, 0.8); z-index: 100; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800">
+
+    <!-- Loading State -->
+    <div id="loading-screen" class="fixed inset-0 loading-overlay flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-gray-600 font-medium">Syncing with Cloud...</p>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="bg-white border-b sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-bold text-blue-600">InventoryHub</h1>
+                    <span id="user-badge" class="hidden text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500"></span>
+                </div>
+                <nav class="flex space-x-8">
+                    <button onclick="switchTab('list')" id="tab-list" class="py-4 px-1 text-sm font-medium transition-colors tab-active">Stock List</button>
+                    <button onclick="switchTab('transactions')" id="tab-transactions" class="py-4 px-1 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700">Transactions</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Tab: List View -->
+        <div id="view-list">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                <div class="flex flex-1 gap-2">
+                    <input type="text" id="search-input" oninput="renderStock()" placeholder="Search lots..." class="w-full md:max-w-xs px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <select id="filter-type" onchange="renderStock()" class="px-4 py-2 border rounded-lg bg-white">
+                        <option value="">All Types</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <select id="sort-by" onchange="renderStock()" class="px-4 py-2 border rounded-lg bg-white">
+                        <option value="purchaseDate">Date (Newest)</option>
+                        <option value="lotName">Name (A-Z)</option>
+                        <option value="quantity">Quantity (Low-High)</option>
+                    </select>
+                    <button onclick="openModal('buy')" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Buy New Lot</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="stock-container">
+                <!-- Cards will be injected here -->
+            </div>
+        </div>
+
+        <!-- Tab: Transactions View -->
+        <div id="view-transactions" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div class="p-4 border-b bg-gray-50 flex flex-wrap gap-4 items-center justify-between">
+                    <h2 class="font-semibold text-lg">History</h2>
+                    <div class="flex gap-2">
+                        <select id="group-by" onchange="renderTransactions()" class="px-3 py-1 text-sm border rounded bg-white">
+                            <option value="none">No Grouping</option>
+                            <option value="type">Group by Type</option>
+                            <option value="lotName">Group by Lot Name</option>
+                            <option value="action">Group by Action (Buy/Sell)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">Date</th>
+                                <th class="px-6 py-3 font-semibold">Action</th>
+                                <th class="px-6 py-3 font-semibold">Lot Name</th>
+                                <th class="px-6 py-3 font-semibold">Quantity</th>
+                                <th class="px-6 py-3 font-semibold">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-body" class="divide-y">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Buy / Edit / Sell -->
+    <div id="main-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 id="modal-title" class="text-xl font-bold">Manage Lot</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form id="inventory-form" class="p-6">
+                <input type="hidden" id="edit-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Lot Name</label>
+                        <input type="text" id="lotName" required class="w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Type</label>
+                        <input type="text" id="type" list="type-suggestions" required class="w-full px-3 py-2 border rounded-md">
+                        <datalist id="type-suggestions"></datalist>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Quantity</label>
+                        <input type="number" id="quantity" required min="1" class="w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Weight (kg/unit)</label>
+                        <input type="number" step="0.01" id="weight" class="w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Color</label>
+                        <input type="text" id="color" class="w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Currency</label>
+                        <select id="buyingCurrency" class="w-full px-3 py-2 border rounded-md">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Unit Price</label>
+                        <input type="number" step="0.01" id="buyingPrice" required class="w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Purchase Date</label>
+                        <input type="date" id="purchaseDate" required class="w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Share %</label>
+                        <input type="number" id="share" value="100" class="w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div class="md:col-span-2 space-y-1">
+                        <label class="text-xs font-semibold uppercase text-gray-500">Notes</label>
+                        <textarea id="notes" rows="2" class="w-full px-3 py-2 border rounded-md"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex flex-col md:flex-row gap-3">
+                    <button type="submit" id="submit-btn" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">Save Changes</button>
+                    <button type="button" id="delete-btn" onclick="deleteLot()" class="bg-red-50 text-red-600 px-6 py-2 rounded-lg font-bold hover:bg-red-100 transition hidden">Delete Lot</button>
+                    <button type="button" onclick="closeModal()" class="bg-gray-100 text-gray-600 px-6 py-2 rounded-lg font-bold hover:bg-gray-200 transition">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Sell Entry -->
+    <div id="sell-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6">
+            <h3 class="text-xl font-bold mb-4">Sell Item</h3>
+            <div id="sell-item-info" class="text-sm text-gray-600 mb-4"></div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase">Quantity to Sell</label>
+                    <input type="number" id="sell-qty" min="1" class="w-full px-3 py-2 border rounded-md mt-1">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="confirmSell()" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 transition">Confirm Sale</button>
+                    <button onclick="closeSellModal()" class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-bold hover:bg-gray-200 transition">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, query, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration - DO NOT CHANGE
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6eM6AdieHc_ZTA5VMqi5BYrWFh4qQ_Ys",
+            authDomain: "nawrat-3e6d3.firebaseapp.com",
+            projectId: "nawrat-3e6d3",
+            storageBucket: "nawrat-3e6d3.firebasestorage.app",
+            messagingSenderId: "106916539773",
+            appId: "1:106916539773:web:ff4e7d3a6f6d89097cf014",
+            measurementId: "G-199YSN6DFM"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = "1:106916539773:web:ff4e7d3a6f6d89097cf014"; 
+
+        // Global State
+        let currentUser = null;
+        let stock = [];
+        let transactions = [];
+        let sellTargetId = null;
+
+        // Exponential backoff helper for API calls
+        async function withRetry(fn, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    return await fn();
+                } catch (err) {
+                    if (i === maxRetries - 1) throw err;
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                }
+            }
+        }
+
+        // --- AUTHENTICATION ---
+        async function initAuth() {
+            try {
+                // RULE 3: Auth BEFORE Queries - Always signInAnonymously
+                const performAuth = async () => {
+                    return await signInAnonymously(auth);
+                };
+
+                await withRetry(performAuth);
+            } catch (error) {
+                console.error("Auth error:", error);
+                document.getElementById('loading-screen').innerHTML = `
+                    <div class="p-6 bg-white shadow-xl rounded-xl text-center max-w-sm mx-auto">
+                        <p class="text-red-600 font-bold mb-2">Auth Error: ${error.code || 'sign-in-failed'}</p>
+                        <p class="text-gray-500 text-sm">Please ensure Anonymous Authentication is enabled in your Firebase console.</p>
+                        <button onclick="location.reload()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Retry</button>
+                    </div>`;
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('user-badge').innerText = user.uid;
+                document.getElementById('user-badge').classList.remove('hidden');
+                setupListeners();
+            }
+        });
+
+        // --- FIRESTORE LISTENERS ---
+        function setupListeners() {
+            if (!currentUser) return;
+
+            // RULE 1: Strict Paths /artifacts/{appId}/users/{userId}/...
+            const stockRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'stock');
+            onSnapshot(stockRef, (snapshot) => {
+                stock = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderStock();
+                updateFilters();
+                document.getElementById('loading-screen').classList.add('hidden');
+            }, (err) => {
+                console.error("Firestore error:", err);
+                document.getElementById('loading-screen').innerHTML = `<p class="text-red-500 px-4 text-center">Firestore Access Denied. Path: artifacts/${appId}/users/${currentUser.uid}</p>`;
+            });
+
+            const transRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'transactions');
+            onSnapshot(transRef, (snapshot) => {
+                // RULE 2: Filter/Sort in memory
+                transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                if (!document.getElementById('view-transactions').classList.contains('hidden')) {
+                    renderTransactions();
+                }
+            }, (err) => console.error("Trans Listener error:", err));
+        }
+
+        // --- UI & LOGIC ---
+        window.switchTab = (tab) => {
+            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
+            document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
+            document.getElementById('tab-list').className = tab === 'list' ? 'py-4 px-1 text-sm font-medium transition-colors tab-active' : 'py-4 px-1 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700';
+            document.getElementById('tab-transactions').className = tab === 'transactions' ? 'py-4 px-1 text-sm font-medium transition-colors tab-active' : 'py-4 px-1 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700';
+            if (tab === 'transactions') renderTransactions();
+        };
+
+        window.renderStock = () => {
+            const container = document.getElementById('stock-container');
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const typeFilter = document.getElementById('filter-type').value;
+            const sortBy = document.getElementById('sort-by').value;
+
+            let filtered = stock.filter(item => {
+                const matchesSearch = item.lotName?.toLowerCase().includes(search) || item.type?.toLowerCase().includes(search);
+                const matchesType = typeFilter === "" || item.type === typeFilter;
+                return matchesSearch && matchesType;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'lotName') return (a.lotName || "").localeCompare(b.lotName || "");
+                if (sortBy === 'quantity') return (a.quantity || 0) - (b.quantity || 0);
+                return new Date(b.purchaseDate) - new Date(a.purchaseDate);
+            });
+
+            container.innerHTML = filtered.length === 0 ? `<div class="col-span-full py-12 text-center text-gray-500">Empty Inventory</div>` : '';
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition cursor-pointer relative group";
+                card.onclick = (e) => { if (e.target.tagName !== 'BUTTON') openModal('edit', item.id); };
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase tracking-wider">${item.type}</span>
+                            <h3 class="text-lg font-bold mt-1">${item.lotName}</h3>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-gray-900">${item.quantity} <span class="text-xs text-gray-400 font-normal">PCS</span></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-2 text-xs border-t pt-3">
+                        <div class="text-gray-500">Weight: <span class="text-gray-900 font-medium">${item.weight || '-'} kg</span></div>
+                        <div class="text-gray-500">Color: <span class="text-gray-900 font-medium">${item.color || '-'}</span></div>
+                        <div class="text-gray-500">Price: <span class="text-gray-900 font-medium">${item.buyingCurrency} ${item.buyingPrice}</span></div>
+                        <div class="text-gray-500">Date: <span class="text-gray-900 font-medium">${item.purchaseDate}</span></div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t flex justify-end">
+                         <button onclick="openSellModal('${item.id}')" class="bg-green-600 text-white text-xs px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition">Sell</button>
+                    </div>`;
+                container.appendChild(card);
+            });
+        };
+
+        window.updateFilters = () => {
+            const types = [...new Set(stock.map(i => i.type))];
+            const filterSelect = document.getElementById('filter-type');
+            const dataList = document.getElementById('type-suggestions');
+            const currentFilter = filterSelect.value;
+            filterSelect.innerHTML = '<option value="">All Types</option>';
+            dataList.innerHTML = '';
+            types.forEach(t => {
+                filterSelect.innerHTML += `<option value="${t}" ${t === currentFilter ? 'selected' : ''}>${t}</option>`;
+                dataList.innerHTML += `<option value="${t}">`;
+            });
+        };
+
+        // --- CRUD ---
+        window.openModal = (mode, id = null) => {
+            const modal = document.getElementById('main-modal');
+            const form = document.getElementById('inventory-form');
+            form.reset();
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+
+            if (mode === 'edit') {
+                const item = stock.find(i => i.id === id);
+                document.getElementById('modal-title').innerText = "Edit Lot";
+                document.getElementById('delete-btn').classList.remove('hidden');
+                document.getElementById('edit-id').value = id;
+                Object.keys(item).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.value = item[key];
+                });
+            } else {
+                document.getElementById('modal-title').innerText = "Buy New Lot";
+                document.getElementById('delete-btn').classList.add('hidden');
+                document.getElementById('edit-id').value = '';
+                document.getElementById('purchaseDate').valueAsDate = new Date();
+            }
+        };
+
+        window.closeModal = () => {
+            document.getElementById('main-modal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        };
+
+        document.getElementById('inventory-form').onsubmit = async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            const id = document.getElementById('edit-id').value;
+            const formData = {
+                lotName: document.getElementById('lotName').value,
+                type: document.getElementById('type').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                weight: document.getElementById('weight').value,
+                color: document.getElementById('color').value,
+                buyingCurrency: document.getElementById('buyingCurrency').value,
+                buyingPrice: document.getElementById('buyingPrice').value,
+                purchaseDate: document.getElementById('purchaseDate').value,
+                share: document.getElementById('share').value,
+                notes: document.getElementById('notes').value,
+                updatedAt: serverTimestamp()
+            };
+
+            const stockCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'stock');
+            
+            try {
+                if (id) {
+                    await updateDoc(doc(stockCol, id), formData);
+                } else {
+                    await addDoc(stockCol, formData);
+                    logTransaction('BUY', formData, formData.quantity);
+                }
+                closeModal();
+            } catch (err) { console.error("Save error:", err); }
+        };
+
+        window.deleteLot = async () => {
+            const id = document.getElementById('edit-id').value;
+            if (id && confirm('Delete this lot?')) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'stock', id));
+                    closeModal();
+                } catch (err) { console.error("Delete error:", err); }
+            }
+        };
+
+        window.openSellModal = (id) => {
+            const item = stock.find(i => i.id === id);
+            sellTargetId = id;
+            document.getElementById('sell-item-info').innerHTML = `Selling: <strong>${item.lotName}</strong> (Available: ${item.quantity})`;
+            document.getElementById('sell-qty').max = item.quantity;
+            document.getElementById('sell-qty').value = 1;
+            document.getElementById('sell-modal').classList.remove('hidden');
+        };
+
+        window.closeSellModal = () => document.getElementById('sell-modal').classList.add('hidden');
+
+        window.confirmSell = async () => {
+            const qty = parseInt(document.getElementById('sell-qty').value);
+            const item = stock.find(i => i.id === sellTargetId);
+            if (!item || qty <= 0 || qty > item.quantity) return;
+
+            const stockDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'stock', sellTargetId);
+            try {
+                if (item.quantity === qty) {
+                    await deleteDoc(stockDoc);
+                } else {
+                    await updateDoc(stockDoc, { quantity: item.quantity - qty });
+                }
+                logTransaction('SELL', item, qty);
+                closeSellModal();
+            } catch (err) { console.error("Sale error:", err); }
+        };
+
+        async function logTransaction(action, item, qty) {
+            if (!currentUser) return;
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'transactions'), {
+                    action,
+                    lotName: item.lotName,
+                    type: item.type,
+                    quantity: qty,
+                    unitPrice: `${item.buyingCurrency} ${item.buyingPrice}`,
+                    timestamp: serverTimestamp(),
+                    displayDate: new Date().toLocaleString()
+                });
+            } catch (err) { console.error("Log error:", err); }
+        }
+
+        window.renderTransactions = () => {
+            const tbody = document.getElementById('transaction-body');
+            const groupBy = document.getElementById('group-by').value;
+            tbody.innerHTML = '';
+
+            if (groupBy === 'none') {
+                transactions.forEach(t => appendRow(tbody, t));
+            } else {
+                const groups = transactions.reduce((acc, t) => {
+                    const key = t[groupBy] || "Uncategorized";
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(t);
+                    return acc;
+                }, {});
+
+                for (let group in groups) {
+                    const h = document.createElement('tr');
+                    h.className = "bg-gray-100 font-bold";
+                    h.innerHTML = `<td colspan="5" class="px-6 py-2 text-blue-700">${group}</td>`;
+                    tbody.appendChild(h);
+                    groups[group].forEach(t => appendRow(tbody, t));
+                }
+            }
+        };
+
+        function appendRow(parent, t) {
+            const row = document.createElement('tr');
+            row.className = "hover:bg-gray-50";
+            const color = t.action === 'BUY' ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50';
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-gray-500 text-xs">${t.displayDate || '...'}</td>
+                <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 rounded text-[10px] font-bold ${color}">${t.action}</span></td>
+                <td class="px-6 py-4 font-medium text-gray-900">${t.lotName}</td>
+                <td class="px-6 py-4 text-gray-700">${t.quantity}</td>
+                <td class="px-6 py-4 text-gray-500 italic text-xs">${t.unitPrice}</td>`;
+            parent.appendChild(row);
+        }
+
+        initAuth();
+    </script>
+</body>
+</html>
