@@ -1,6 +1,6 @@
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('v1').then((cache) => cache.addAll(['/', '/inventory-system/index.html']))
+    caches.open('v1').then((cache) => cache.addAll(['/inventory-system/', '/inventory-system/index.html']))
   );
 });
 
