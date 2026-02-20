@@ -90,7 +90,10 @@
 
     <!-- Loading State -->
     <div id="loading-screen" class="fixed inset-0 loading-overlay flex flex-col items-center justify-center p-6 text-center">
-        <div class="h-16 w-16 border-4 border-gold-light border-t-[#D4AF37] rounded-full animate-spin mb-4"></div>
+        <div class="relative mb-6">
+            <div class="h-24 w-24 border-4 border-gold-light border-t-[#D4AF37] rounded-full animate-spin"></div>
+            <img src="/inventory-system/img/icon.png" alt="Nawarat Icon" class="absolute inset-0 m-auto h-12 w-12 object-contain" onerror="this.style.display='none'">
+        </div>
         <p class="text-gray-900 font-bold text-xl tracking-wide">NAWARAT</p>
         <p class="text-xs text-[#D4AF37] uppercase tracking-[0.3em] mt-1">Inventory System</p>
     </div>
