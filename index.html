@@ -69,6 +69,14 @@
                 top: 1rem; 
                 right: 1rem;
             }
+            .pagination-container {
+                position: sticky;
+                bottom: 0;
+                background: white;
+                padding: 1rem;
+                border-top: 1px solid var(--gold-border);
+                box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            }
         }
 
         .gold-card {
@@ -117,7 +125,7 @@
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#D4AF37]">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </span>
-                            <input type="text" id="search-input" oninput="renderStock()" placeholder="Search lot or gemstone type..." class="w-full pl-12 pr-4 py-3 border border-gold-border rounded-xl focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none transition-all bg-white text-sm shadow-sm">
+                            <input type="text" id="search-input" oninput="resetStockPage(); renderStock()" placeholder="Search lot or gemstone type..." class="w-full pl-12 pr-4 py-3 border border-gold-border rounded-xl focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none transition-all bg-white text-sm shadow-sm">
                         </div>
                         <button onclick="openModal('buy')" class="gold-button px-6 py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] whitespace-nowrap">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -125,20 +133,20 @@
                         </button>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <select id="filter-type" onchange="renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-type" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Variety</option>
                         </select>
-                        <select id="filter-weight" onchange="renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-weight" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Weights</option>
                             <option value="0-1">0 - 1 CT</option>
                             <option value="1-3">1 - 3 CT</option>
                             <option value="3-5">3 - 5 CT</option>
                             <option value="5+">5+ CT</option>
                         </select>
-                        <select id="filter-quality" onchange="renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-quality" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Grades</option>
                         </select>
-                        <select id="sort-by" onchange="renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm">
+                        <select id="sort-by" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm">
                             <option value="purchaseDate">Date (Newest)</option>
                             <option value="lotName">Name (A-Z)</option>
                             <option value="weight">Weight (High-Low)</option>
@@ -165,6 +173,9 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="stock-pagination" class="pagination-container border-t border-gold-border bg-[#F9F6EE]/30 px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <!-- Stock pagination buttons here -->
+                </div>
                 <div id="empty-state" class="hidden py-24 text-center">
                     <p class="text-gray-400 italic font-serif text-lg">Inventory vault is currently empty.</p>
                 </div>
@@ -176,14 +187,14 @@
             <!-- Search & Filter Controls for Transactions -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div class="relative md:col-span-1">
-                    <input type="text" id="trans-search" oninput="renderTransactions()" placeholder="Search lot number..." class="w-full pl-4 pr-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none text-sm bg-white shadow-sm">
+                    <input type="text" id="trans-search" oninput="resetTransPage(); renderTransactions()" placeholder="Search lot number..." class="w-full pl-4 pr-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none text-sm bg-white shadow-sm">
                 </div>
-                <select id="trans-filter-action" onchange="renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                <select id="trans-filter-action" onchange="resetTransPage(); renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                     <option value="">All Actions (Buy/Sell)</option>
                     <option value="BUY">Purchases (BUY)</option>
                     <option value="SELL">Sales (SELL)</option>
                 </select>
-                <select id="trans-filter-date" onchange="renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                <select id="trans-filter-date" onchange="resetTransPage(); renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
                     <option value="yesterday">Yesterday</option>
@@ -193,7 +204,7 @@
                     <option value="6months">Last 6 Months</option>
                     <option value="12months">Last 12 Months</option>
                 </select>
-                <select id="trans-sort-by" onchange="renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                <select id="trans-sort-by" onchange="resetTransPage(); renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                     <option value="date-desc">Date (Newest First)</option>
                     <option value="date-asc">Date (Oldest First)</option>
                     <option value="lot-asc">Lot Name (A-Z)</option>
@@ -207,7 +218,7 @@
                         <p class="text-[10px] text-[#D4AF37] font-bold uppercase tracking-widest mt-1">History of all activities</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                        <select id="group-by" onchange="renderTransactions()" class="px-4 py-2 text-xs border border-gold-border rounded-lg bg-white shadow-sm outline-none">
+                        <select id="group-by" onchange="resetTransPage(); renderTransactions()" class="px-4 py-2 text-xs border border-gold-border rounded-lg bg-white shadow-sm outline-none">
                             <option value="none">Chronological Order</option>
                             <option value="type">Group by Variety</option>
                             <option value="action">Group by Type (Buy/Sell)</option>
@@ -228,12 +239,15 @@
                         <tbody id="transaction-body" class="divide-y divide-[#FDF7E2]"></tbody>
                     </table>
                 </div>
+                <div id="trans-pagination" class="pagination-container border-t border-gold-border bg-[#F9F6EE]/30 px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <!-- Transaction pagination buttons here -->
+                </div>
             </div>
         </div>
 
         <!-- Tab: Financials View -->
         <div id="view-financials" class="hidden space-y-8">
-            <!-- 1. Executive Summary (Share Adjusted) -->
+            <!-- 1. Executive Summary -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="gold-card rounded-2xl p-6 shadow-sm border-l-4 border-green-500">
                     <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Share Sales</h3>
@@ -416,7 +430,7 @@
         </div>
     </main>
 
-    <!-- Modals (Purchase & Sale) -->
+    <!-- Modals -->
     <div id="main-modal" class="fixed inset-0 bg-gray-900/40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
         <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] border-t-4 border-[#D4AF37]">
             <div class="px-8 py-5 border-b border-gold-border flex justify-between items-center bg-[#F9F6EE]">
@@ -540,6 +554,11 @@
         let transactions = [];
         let sellTargetId = null;
 
+        // Pagination State
+        const PAGE_SIZE = 15;
+        let stockCurrentPage = 1;
+        let transCurrentPage = 1;
+
         const STOCK_PATH = ['artifacts', appId, 'public', 'data', 'stock'];
         const TRANS_PATH = ['artifacts', appId, 'public', 'data', 'transactions'];
 
@@ -596,7 +615,6 @@
             activeBtn.className = `w-full text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest border ${activeColor}`;
         };
 
-        // Date Helpers
         const formatDate = (dateStr) => {
             if (!dateStr) return '--';
             const [year, month, day] = dateStr.split('-');
@@ -613,7 +631,47 @@
             return `${d}/${m}/${y} ${time}`;
         };
 
-        // Render Functions
+        // Reset functions for search/filters
+        window.resetStockPage = () => { stockCurrentPage = 1; };
+        window.resetTransPage = () => { transCurrentPage = 1; };
+
+        // Helper to render pagination UI
+        const renderPaginationControls = (elementId, totalItems, currentPage, onPageChange) => {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+
+            const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+            if (totalPages <= 1) {
+                container.innerHTML = `<span class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">${totalItems} Items Total</span>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <button onclick="${onPageChange}(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="p-2 border border-gold-border rounded-lg bg-white disabled:opacity-30 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <span class="text-[10px] font-bold text-gray-700 uppercase tracking-widest px-2">Page ${currentPage} of ${totalPages}</span>
+                    <button onclick="${onPageChange}(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="p-2 border border-gold-border rounded-lg bg-white disabled:opacity-30 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Showing ${Math.min((currentPage - 1) * PAGE_SIZE + 1, totalItems)}-${Math.min(currentPage * PAGE_SIZE, totalItems)} of ${totalItems}</div>
+            `;
+        };
+
+        window.setStockPage = (page) => {
+            stockCurrentPage = page;
+            renderStock();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.setTransPage = (page) => {
+            transCurrentPage = page;
+            renderTransactions();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
         window.renderStock = () => {
             const container = document.getElementById('stock-container');
             const search = document.getElementById('search-input').value.toLowerCase();
@@ -626,7 +684,6 @@
                 const matchesSearch = (item.lotName || "").toLowerCase().includes(search) || (item.type || "").toLowerCase().includes(search);
                 const matchesType = typeFilter === "" || item.type === typeFilter;
                 const matchesQuality = qualityFilter === "" || item.color === qualityFilter;
-                
                 let matchesWeight = true;
                 if (weightFilter !== "") {
                     const w = parseFloat(item.weight || 0);
@@ -645,10 +702,15 @@
                 return new Date(b.purchaseDate || 0) - new Date(a.purchaseDate || 0);
             });
 
+            // Pagination logic
+            const totalItems = filtered.length;
+            const startIndex = (stockCurrentPage - 1) * PAGE_SIZE;
+            const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+
             document.getElementById('empty-state').classList.toggle('hidden', filtered.length > 0);
             container.innerHTML = '';
 
-            filtered.forEach(item => {
+            paginated.forEach(item => {
                 const row = document.createElement('tr');
                 row.className = "group hover:bg-[#FDF7E2] transition-colors data-row cursor-pointer relative";
                 row.onclick = (e) => { if (e.target.closest('button')) return; openModal('edit', item.id); };
@@ -689,6 +751,8 @@
                     </td>`;
                 container.appendChild(row);
             });
+
+            renderPaginationControls('stock-pagination', totalItems, stockCurrentPage, 'setStockPage');
         };
 
         window.updateFilters = () => {
@@ -705,7 +769,6 @@
             if (typeSug) typeSug.innerHTML = types.map(t => `<option value="${t}">`).join('');
         };
 
-        // Inventory Management Logic
         window.openModal = (mode, id = null) => {
             const form = document.getElementById('inventory-form');
             form.reset();
@@ -764,7 +827,6 @@
             }
         };
 
-        // Sale Logic
         window.openSellModal = (id) => {
             const item = stock.find(i => i.id === id);
             sellTargetId = id;
@@ -786,10 +848,11 @@
             if (!item || qty <= 0 || qty > item.quantity || isNaN(price)) return;
 
             const stockDoc = doc(db, ...STOCK_PATH, sellTargetId);
+            const shareCost = (item.buyingPrice / item.quantity) * qty;
+            
             if (item.quantity === qty) await deleteDoc(stockDoc);
             else await updateDoc(stockDoc, { quantity: item.quantity - qty });
             
-            const shareCost = (item.buyingPrice / item.quantity) * qty;
             logTransaction('SELL', item, qty, currency, price, null, shareInput, shareCost);
             closeSellModal();
         };
@@ -826,13 +889,11 @@
             let filtered = transactions.filter(t => {
                 const matchesSearch = (t.lotName || "").toLowerCase().includes(search);
                 const matchesAction = actionFilter === "" || t.action === actionFilter;
-                
                 let matchesDate = true;
                 if (dateFilter !== 'all') {
                     const tDate = t.timestamp ? t.timestamp.toDate() : new Date(0);
                     const now = new Date();
                     const today = new Date(now.setHours(0,0,0,0));
-                    
                     if (dateFilter === 'today') matchesDate = tDate >= today;
                     else if (dateFilter === 'yesterday') {
                         const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
@@ -863,9 +924,14 @@
                 if (sortBy === 'lot-asc') return (a.lotName || "").localeCompare(b.lotName || "");
                 return 0;
             });
+
+            // Pagination logic
+            const totalItems = filtered.length;
+            const startIndex = (transCurrentPage - 1) * PAGE_SIZE;
+            const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
             
             if (groupBy !== 'none') {
-                const groups = filtered.reduce((acc, t) => {
+                const groups = paginated.reduce((acc, t) => {
                     const key = t[groupBy] || "Other";
                     if (!acc[key]) acc[key] = [];
                     acc[key].push(t);
@@ -879,8 +945,10 @@
                     groups[group].forEach(t => appendTransRow(tbody, t));
                 }
             } else {
-                filtered.forEach(t => appendTransRow(tbody, t));
+                paginated.forEach(t => appendTransRow(tbody, t));
             }
+
+            renderPaginationControls('trans-pagination', totalItems, transCurrentPage, 'setTransPage');
         };
 
         function appendTransRow(parent, t) {
@@ -914,11 +982,19 @@
             let shareCost = 0;
             let currentAssetValue = 0;
 
+            // Link transactions to their purchase cost via matching lotName from stock
             transactions.forEach(t => {
                 if (t.action === 'SELL') {
+                    // Find the original stock item to get the purchase price if originalCost isn't explicitly in the transaction
+                    const originalItem = stock.find(s => s.lotName === t.lotName);
+                    
+                    // Priority: Transaction recorded cost -> Derived from stock -> 0
+                    const unitPurchasePrice = t.originalCost ? (t.originalCost / t.quantity) : (originalItem ? (originalItem.buyingPrice / originalItem.quantity) : 0);
+                    const actualCost = unitPurchasePrice * (t.quantity || 0);
+
                     const sharePerc = parseShare(t.share);
                     shareSales += (t.price || 0) * sharePerc;
-                    shareCost += (t.originalCost || 0) * sharePerc;
+                    shareCost += actualCost * sharePerc;
                 }
             });
 
@@ -930,21 +1006,16 @@
             stock.forEach(s => {
                 const val = parseFloat(s.buyingPrice || 0);
                 currentAssetValue += val;
-
                 const pDate = new Date(s.purchaseDate);
                 const diffMonths = (now.getFullYear() - pDate.getFullYear()) * 12 + (now.getMonth() - pDate.getMonth());
-                
                 if (diffMonths <= 6) ageNew += val;
                 else if (diffMonths <= 12) ageMid += val;
                 else ageOld += val;
             });
 
-            const salesEl = document.getElementById('fin-total-sales');
-            const costEl = document.getElementById('fin-total-cost');
-            const assetEl = document.getElementById('fin-asset-value');
-            if (salesEl) salesEl.innerText = `THB ${shareSales.toLocaleString()}`;
-            if (costEl) costEl.innerText = `THB ${shareCost.toLocaleString()}`;
-            if (assetEl) assetEl.innerText = `THB ${currentAssetValue.toLocaleString()}`;
+            document.getElementById('fin-total-sales').innerText = `THB ${shareSales.toLocaleString()}`;
+            document.getElementById('fin-total-cost').innerText = `THB ${shareCost.toLocaleString()}`;
+            document.getElementById('fin-asset-value').innerText = `THB ${currentAssetValue.toLocaleString()}`;
 
             const profit = shareSales - shareCost;
             const profitEl = document.getElementById('fin-net-profit');
@@ -988,7 +1059,6 @@
             }
         };
 
-        // Extract Functions
         window.extractTransactions = () => {
             if (transactions.length === 0) return;
             const exportData = transactions.map(t => ({
@@ -1030,7 +1100,6 @@
             XLSX.writeFile(wb, `Nawarat_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
         };
 
-        // Import Handlers
         document.getElementById('import-excel').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
