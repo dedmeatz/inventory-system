@@ -50,25 +50,34 @@
                 color: #A3A3A3; 
                 font-weight: 700; 
                 text-transform: uppercase; 
-                margin-bottom: 2px;
+                margin-right: 8px;
                 letter-spacing: 0.05em;
+                min-width: 80px;
             }
+            /* Applied to both stock and transaction rows */
             .data-row { 
                 display: flex !important;
                 flex-direction: column; 
-                gap: 0.85rem; 
-                padding: 1.5rem !important; 
+                gap: 0.4rem; 
+                padding: 0.85rem 1.25rem !important; 
                 background: white;
                 margin-bottom: 0.5rem;
                 border: 1px solid var(--gold-border);
                 border-radius: 12px;
             }
-            .data-cell { padding: 0 !important; border: none !important; }
+            .data-cell { 
+                padding: 0 !important; 
+                border: none !important; 
+                display: flex !important;
+                align-items: center;
+                justify-content: flex-start;
+                text-align: left !important;
+            }
             .hide-on-mobile { display: none !important; }
             .stock-badge-mobile { 
                 position: absolute; 
-                top: 1rem; 
-                right: 1rem;
+                top: 0.85rem; 
+                right: 1.25rem;
             }
             .pagination-container {
                 position: sticky;
@@ -77,6 +86,17 @@
                 padding: 1rem;
                 border-top: 1px solid var(--gold-border);
                 box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            }
+            /* Ensure the transaction table container shows rows correctly */
+            #transaction-body {
+                display: block;
+                padding: 1rem;
+            }
+            #view-transactions table, #view-transactions thead, #view-transactions tbody, #view-transactions th, #view-transactions td, #view-transactions tr {
+                display: block;
+            }
+            #view-transactions thead {
+                display: none;
             }
         }
 
@@ -231,7 +251,7 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                        <thead class="bg-[#F9F6EE] text-[#B8860B] uppercase text-[9px] font-bold tracking-widest">
+                        <thead class="bg-[#F9F6EE] text-[#B8860B] uppercase text-[9px] font-bold tracking-widest hide-on-mobile">
                             <tr>
                                 <th class="px-8 py-4">Date & Time</th>
                                 <th class="px-8 py-4 text-center">Action</th>
@@ -574,14 +594,14 @@
                     updateFilters();
                     calculateFinancials();
                     document.getElementById('loading-screen').classList.add('hidden');
-                });
+                }, (err) => console.error(err));
                 
                 onSnapshot(collection(db, ...TRANS_PATH), (s) => {
                     transactions = s.docs.map(d => ({ id: d.id, ...d.data() }));
                     transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                     renderTransactions();
                     calculateFinancials();
-                });
+                }, (err) => console.error(err));
             } else {
                 signInAnonymously(auth);
             }
@@ -706,7 +726,6 @@
                 return new Date(b.purchaseDate || 0) - new Date(a.purchaseDate || 0);
             });
 
-            // Pagination logic
             const totalItems = filtered.length;
             const startIndex = (stockCurrentPage - 1) * PAGE_SIZE;
             const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
@@ -721,21 +740,21 @@
                 row.innerHTML = `
                     <td class="px-8 py-6 data-cell">
                         <span class="mobile-label">Identity</span>
-                        <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
                             <span class="font-bold text-gray-900 text-lg sm:text-base">${item.lotName || 'Unnamed'}</span>
-                            <span class="text-[9px] font-bold text-[#B8860B] bg-[#FDF7E2] px-2 py-0.5 rounded uppercase mt-1 w-fit tracking-widest border border-gold-border">${item.type || 'Standard'}</span>
+                            <span class="text-[9px] font-bold text-[#B8860B] bg-[#FDF7E2] px-2 py-0.5 rounded uppercase tracking-widest border border-gold-border">${item.type || 'Standard'}</span>
                         </div>
                     </td>
                     <td class="px-8 py-6 data-cell">
                         <span class="mobile-label">Gem Details</span>
-                        <div class="flex flex-col text-sm">
+                        <div class="flex items-center gap-2 text-sm">
                             <span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span>
                             <span class="text-xs text-gray-500 font-serif italic">${item.color || 'Standard Grade'}</span>
                         </div>
                     </td>
                     <td class="px-8 py-6 data-cell">
                         <span class="mobile-label">Purchased</span>
-                        <div class="flex flex-col text-sm">
+                        <div class="flex items-center gap-2 text-sm">
                             <span class="font-bold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span>
                             <span class="text-[10px] text-gray-400 font-mono">${formatDate(item.purchaseDate)}</span>
                         </div>
@@ -746,7 +765,7 @@
                         </div>
                     </td>
                     <td class="px-8 py-6 data-cell text-right">
-                        <div class="flex sm:justify-end gap-3">
+                        <div class="flex sm:justify-end gap-3 flex-1">
                             <button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 bg-green-600 text-white text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-green-700 transition-all shadow-sm">Sale</button>
                             <button onclick="openModal('edit', '${item.id}')" class="p-2.5 bg-white border border-gold-border text-[#D4AF37] rounded-lg sm:block hidden hover:bg-gold-light">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -929,7 +948,6 @@
                 return 0;
             });
 
-            // Pagination logic
             const totalItems = filtered.length;
             const startIndex = (transCurrentPage - 1) * PAGE_SIZE;
             const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
@@ -957,23 +975,35 @@
 
         function appendTransRow(parent, t) {
             const row = document.createElement('tr');
-            row.className = "hover:bg-gold-light/20 transition-colors text-[11px]";
+            row.className = "hover:bg-gold-light/20 transition-colors text-[11px] data-row relative";
             const actionClass = t.action === 'BUY' ? 'text-blue-700 bg-blue-50 border-blue-100' : 'text-green-700 bg-green-50 border-green-100';
             row.innerHTML = `
-                <td class="px-8 py-5 text-gray-400 font-mono">${formatDateTime(t.timestamp)}</td>
-                <td class="px-8 py-5 text-center"><span class="px-2.5 py-1 rounded-full font-bold border ${actionClass}">${t.action}</span></td>
-                <td class="px-8 py-5">
-                    <div class="flex flex-col">
+                <td class="px-8 py-5 text-gray-400 font-mono data-cell">
+                    <span class="mobile-label">Date & Time</span>
+                    ${formatDateTime(t.timestamp)}
+                </td>
+                <td class="px-8 py-5 text-center data-cell">
+                    <span class="mobile-label">Action</span>
+                    <span class="px-2.5 py-1 rounded-full font-bold border ${actionClass}">${t.action}</span>
+                </td>
+                <td class="px-8 py-5 data-cell">
+                    <span class="mobile-label">Lot Name</span>
+                    <div class="flex items-center gap-2">
                         <span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span>
-                        <span class="text-[9px] text-gray-400 uppercase tracking-tighter">${t.type || 'Standard'} • ${t.weight || '0'} CT • ${t.color || 'Standard Grade'} • Share: ${t.share || '100%'}</span>
+                        <span class="text-[9px] text-gray-400 uppercase tracking-tighter">${t.type || 'Standard'} • ${t.weight || '0'} CT • Share: ${t.share || '100%'}</span>
                     </div>
                 </td>
-                <td class="px-8 py-5 text-center font-black text-gray-600">${t.quantity || 0}</td>
-                <td class="px-8 py-5 font-bold text-gray-900">${t.totalValue || 'N/A'}</td>`;
+                <td class="px-8 py-5 text-center font-black text-gray-600 data-cell">
+                    <span class="mobile-label">Qty</span>
+                    ${t.quantity || 0}
+                </td>
+                <td class="px-8 py-5 font-bold text-gray-900 data-cell">
+                    <span class="mobile-label">Value</span>
+                    ${t.totalValue || 'N/A'}
+                </td>`;
             parent.appendChild(row);
         }
 
-        // FINANCIAL CALCULATIONS
         function parseShare(shareStr) {
             if (!shareStr) return 1.0;
             const match = shareStr.match(/(\d+)%/);
@@ -986,16 +1016,11 @@
             let shareCost = 0;
             let currentAssetValue = 0;
 
-            // Link transactions to their purchase cost via matching lotName from stock
             transactions.forEach(t => {
                 if (t.action === 'SELL') {
-                    // Find the original stock item to get the purchase price if originalCost isn't explicitly in the transaction
                     const originalItem = stock.find(s => s.lotName === t.lotName);
-                    
-                    // Priority: Transaction recorded cost -> Derived from stock -> 0
                     const unitPurchasePrice = t.originalCost ? (t.originalCost / t.quantity) : (originalItem ? (originalItem.buyingPrice / originalItem.quantity) : 0);
                     const actualCost = unitPurchasePrice * (t.quantity || 0);
-
                     const sharePerc = parseShare(t.share);
                     shareSales += (t.price || 0) * sharePerc;
                     shareCost += actualCost * sharePerc;
@@ -1176,7 +1201,6 @@
                     const lotNameVal = String(row.lotName || 'Unnamed Lot');
                     const sDate = row.saleDate ? (row.saleDate instanceof Date ? row.saleDate : new Date(row.saleDate)) : new Date();
                     
-                    // Check if transaction for this lot and date already exists
                     const existingTrans = transactions.find(t => 
                         t.lotName === lotNameVal && 
                         t.action === action &&
