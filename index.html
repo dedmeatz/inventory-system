@@ -349,7 +349,7 @@
                     <!-- Inventory Import Subtab -->
                     <div id="admin-panel-inventory" class="gold-card rounded-2xl p-8 shadow-sm">
                         <h2 class="text-xl font-bold text-gray-900 mb-2">Bulk Import Inventory</h2>
-                        <p class="text-xs text-gray-500 mb-8">Upload an .xlsx file to bulk import gemstones into your stock.</p>
+                        <p class="text-xs text-gray-500 mb-8">Upload an .xlsx file. If <b>lotName</b> exists, it will be updated. Otherwise, a new record is created.</p>
                         
                         <div class="border-2 border-dashed border-gold-border rounded-2xl p-12 text-center bg-gray-50/50">
                             <input type="file" id="import-excel" accept=".xlsx, .xls" class="hidden">
@@ -379,7 +379,7 @@
                     <!-- Transactions Import Subtab -->
                     <div id="admin-panel-transactions" class="gold-card rounded-2xl p-8 shadow-sm hidden">
                         <h2 class="text-xl font-bold text-gray-900 mb-2 text-green-700">Import Historical Transactions</h2>
-                        <p class="text-xs text-gray-500 mb-8">Upload an .xlsx file to bulk record historical sales or purchases.</p>
+                        <p class="text-xs text-gray-500 mb-8">Upload an .xlsx file. Matches by <b>lotName</b> and <b>timestamp</b> (or date) to update or append history.</p>
                         
                         <div class="border-2 border-dashed border-green-200 rounded-2xl p-12 text-center bg-green-50/30">
                             <input type="file" id="import-trans-excel" accept=".xlsx, .xls" class="hidden">
@@ -1116,11 +1116,18 @@
                 const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
                 const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
                 const today = new Date().toISOString().split('T')[0];
+                let updateCount = 0;
+                let addCount = 0;
+
                 for (let i = 0; i < data.length; i++) {
                     const row = data[i];
+                    const lotNameVal = String(row.lotName || 'Imported Lot');
+                    const existingItem = stock.find(s => s.lotName === lotNameVal);
+
                     let pDate = row.purchaseDate ? (row.purchaseDate instanceof Date ? row.purchaseDate.toISOString().split('T')[0] : String(row.purchaseDate)) : today;
-                    await addDoc(collection(db, ...STOCK_PATH), {
-                        lotName: String(row.lotName || 'Imported Lot'),
+                    
+                    const payload = {
+                        lotName: lotNameVal,
                         type: String(row.type || 'Standard'),
                         quantity: parseInt(row.quantity || 0),
                         weight: String(row.weight || '0'),
@@ -1131,11 +1138,20 @@
                         share: String(row.share || '100%'),
                         notes: String(row.notes || ''),
                         updatedAt: serverTimestamp()
-                    });
+                    };
+
+                    if (existingItem) {
+                        await updateDoc(doc(db, ...STOCK_PATH, existingItem.id), payload);
+                        updateCount++;
+                    } else {
+                        await addDoc(collection(db, ...STOCK_PATH), payload);
+                        addCount++;
+                    }
+                    
                     progress.style.width = `${Math.round(((i + 1) / data.length) * 100)}%`;
-                    message.innerText = `Importing Inventory: ${i + 1} / ${data.length}`;
+                    message.innerText = `Processing: ${i + 1} / ${data.length}`;
                 }
-                message.innerText = `Success: ${data.length} items imported.`;
+                message.innerText = `Finished: ${addCount} Added, ${updateCount} Updated.`;
             };
             reader.readAsBinaryString(file);
         });
@@ -1151,21 +1167,49 @@
             reader.onload = async (evt) => {
                 const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
                 const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                let updateCount = 0;
+                let addCount = 0;
+
                 for (let i = 0; i < data.length; i++) {
                     const row = data[i];
                     const action = (row.action || "SELL").toUpperCase();
+                    const lotNameVal = String(row.lotName || 'Unnamed Lot');
                     const sDate = row.saleDate ? (row.saleDate instanceof Date ? row.saleDate : new Date(row.saleDate)) : new Date();
-                    const itemStub = {
-                        lotName: String(row.lotName || 'Unnamed Lot'),
-                        type: String(row.type || 'Standard'),
+                    
+                    // Check if transaction for this lot and date already exists
+                    const existingTrans = transactions.find(t => 
+                        t.lotName === lotNameVal && 
+                        t.action === action &&
+                        formatDate(t.timestamp?.toDate()?.toISOString()?.split('T')[0]) === formatDate(sDate.toISOString().split('T')[0])
+                    );
+
+                    const payload = {
+                        action, 
+                        lotName: lotNameVal, 
+                        type: String(row.type || 'Standard'), 
                         weight: String(row.weight || '0'),
-                        color: String(row.color || '')
+                        color: String(row.color || ''),
+                        quantity: parseInt(row.quantity || 1),
+                        price: parseFloat(row.salePrice || 0),
+                        currency: String(row.currency || 'THB'),
+                        share: String(row.share || '100%'),
+                        originalCost: parseFloat(row.originalCost || 0),
+                        totalValue: `${row.currency || 'THB'} ${Number(row.salePrice || 0).toLocaleString()}`,
+                        timestamp: Timestamp.fromDate(sDate)
                     };
-                    await logTransaction(action, itemStub, parseInt(row.quantity || 1), "THB", row.salePrice || 0, sDate, row.share || '100%', row.originalCost || 0);
+
+                    if (existingTrans) {
+                        await updateDoc(doc(db, ...TRANS_PATH, existingTrans.id), payload);
+                        updateCount++;
+                    } else {
+                        await addDoc(collection(db, ...TRANS_PATH), payload);
+                        addCount++;
+                    }
+
                     progress.style.width = `${Math.round(((i + 1) / data.length) * 100)}%`;
-                    message.innerText = `Importing History: ${i + 1} / ${data.length}`;
+                    message.innerText = `Processing: ${i + 1} / ${data.length}`;
                 }
-                message.innerText = `Success: ${data.length} transactions recorded.`;
+                message.innerText = `Finished: ${addCount} Recorded, ${updateCount} Updated.`;
             };
             reader.readAsBinaryString(file);
         });
