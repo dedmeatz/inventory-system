@@ -11,6 +11,7 @@
             navigator.serviceWorker.register('/inventory-system/sw.js');
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -31,7 +32,7 @@
         .gold-button {
             background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
             color: white;
-            transition: all 0.3s_ease;
+            transition: all 0.3s ease;
         }
         .gold-button:hover {
             background: linear-gradient(135deg, #E5D5A1 0%, #D4AF37 100%);
@@ -95,9 +96,11 @@
                         <p class="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold -mt-1">Inventory System</p>
                     </div>
                 </div>
-                <nav class="flex w-full sm:w-auto justify-center sm:justify-end mt-4 sm:mt-0 gap-8">
-                    <button onclick="switchTab('list')" id="tab-list" class="py-2 text-sm font-semibold transition-all tab-active uppercase tracking-widest">Stock</button>
-                    <button onclick="switchTab('transactions')" id="tab-transactions" class="py-2 text-sm font-semibold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest">Transactions</button>
+                <nav class="flex w-full sm:w-auto justify-center sm:justify-end mt-4 sm:mt-0 gap-8 overflow-x-auto no-scrollbar">
+                    <button onclick="switchTab('list')" id="tab-list" class="py-2 text-[10px] font-bold transition-all tab-active uppercase tracking-widest whitespace-nowrap">Stock</button>
+                    <button onclick="switchTab('transactions')" id="tab-transactions" class="py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap">Transactions</button>
+                    <button onclick="switchTab('financials')" id="tab-financials" class="py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap">Financials</button>
+                    <button onclick="switchTab('admin')" id="tab-admin" class="py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap">Admin</button>
                 </nav>
             </div>
         </div>
@@ -170,6 +173,33 @@
 
         <!-- Tab: Transactions View -->
         <div id="view-transactions" class="hidden">
+            <!-- Search & Filter Controls for Transactions -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="relative md:col-span-1">
+                    <input type="text" id="trans-search" oninput="renderTransactions()" placeholder="Search lot number..." class="w-full pl-4 pr-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none text-sm bg-white shadow-sm">
+                </div>
+                <select id="trans-filter-action" onchange="renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                    <option value="">All Actions (Buy/Sell)</option>
+                    <option value="BUY">Purchases (BUY)</option>
+                    <option value="SELL">Sales (SELL)</option>
+                </select>
+                <select id="trans-filter-date" onchange="renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="7days">Last 7 Days</option>
+                    <option value="30days">Last 30 Days</option>
+                    <option value="3months">Last 3 Months</option>
+                    <option value="6months">Last 6 Months</option>
+                    <option value="12months">Last 12 Months</option>
+                </select>
+                <select id="trans-sort-by" onchange="renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                    <option value="date-desc">Date (Newest First)</option>
+                    <option value="date-asc">Date (Oldest First)</option>
+                    <option value="lot-asc">Lot Name (A-Z)</option>
+                </select>
+            </div>
+
             <div class="gold-card rounded-2xl shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-gold-border bg-[#F9F6EE] flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                     <div>
@@ -200,9 +230,193 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tab: Financials View -->
+        <div id="view-financials" class="hidden space-y-8">
+            <!-- 1. Executive Summary (Share Adjusted) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="gold-card rounded-2xl p-6 shadow-sm border-l-4 border-green-500">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Share Sales</h3>
+                    <p id="fin-total-sales" class="text-2xl font-black text-gray-900">THB 0</p>
+                    <p class="text-[9px] text-gray-400 mt-1 uppercase">Adjusted by your share %</p>
+                </div>
+                <div class="gold-card rounded-2xl p-6 shadow-sm border-l-4 border-blue-500">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Inventory Share Cost</h3>
+                    <p id="fin-total-cost" class="text-2xl font-black text-gray-900">THB 0</p>
+                    <p class="text-[9px] text-gray-400 mt-1 uppercase">Attributed cost of sold items</p>
+                </div>
+                <div id="fin-profit-card" class="gold-card rounded-2xl p-6 shadow-sm border-l-4">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Net Profit/Loss</h3>
+                    <p id="fin-net-profit" class="text-2xl font-black">THB 0</p>
+                    <p id="fin-profit-label" class="text-[9px] mt-1 uppercase font-bold tracking-wider">Calculated realized gain</p>
+                </div>
+            </div>
+
+            <!-- 2. Inventory Valuation -->
+            <div class="gold-card rounded-2xl p-8 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Inventory Valuation</h2>
+                        <p class="text-[10px] text-[#D4AF37] font-bold uppercase tracking-widest mt-1">Current Book Value of Vault</p>
+                    </div>
+                    <div class="text-right">
+                        <p id="fin-asset-value" class="text-3xl font-black text-[#D4AF37]">THB 0</p>
+                        <p class="text-[9px] text-gray-400 uppercase tracking-widest">Total Asset Principal</p>
+                    </div>
+                </div>
+                <div class="p-4 bg-gold-light/30 border border-gold-border rounded-xl">
+                    <p class="text-xs text-gray-600 leading-relaxed italic">
+                        The current asset value is calculated based on the <b>original purchase price</b> of all items currently in stock. This represents the total capital tied up in the vault across all currencies (normalized to THB).
+                    </p>
+                </div>
+            </div>
+
+            <!-- 3. Performance & Aging -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Turnover Rate -->
+                <div class="gold-card rounded-2xl p-8 shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Turnover Rate</h2>
+                    <div id="turnover-container" class="space-y-4">
+                        <!-- Variety rows injected here -->
+                    </div>
+                </div>
+
+                <!-- Aging Analysis -->
+                <div class="gold-card rounded-2xl p-8 shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Aging Analysis</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Current Stock (0-6 Months)</span>
+                                <span id="age-new-val" class="text-sm font-bold text-green-600">THB 0</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div id="age-new-bar" class="bg-green-500 h-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Aged Stock (6-12 Months)</span>
+                                <span id="age-mid-val" class="text-sm font-bold text-orange-400">THB 0</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div id="age-mid-bar" class="bg-orange-400 h-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Dormant Capital (12+ Months)</span>
+                                <span id="age-old-val" class="text-sm font-bold text-red-600">THB 0</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div id="age-old-bar" class="bg-red-600 h-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Admin View -->
+        <div id="view-admin" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Admin Sidebar -->
+                <div class="lg:col-span-1 flex flex-col gap-2">
+                    <button onclick="switchAdminSubTab('inventory')" id="admin-subtab-inventory" class="w-full text-left px-4 py-3 rounded-xl bg-gold-light text-[#D4AF37] font-bold text-xs uppercase tracking-widest border border-gold-border">Import Inventory</button>
+                    <button onclick="switchAdminSubTab('transactions')" id="admin-subtab-transactions" class="w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Import Transactions</button>
+                    <button onclick="switchAdminSubTab('extract')" id="admin-subtab-extract" class="w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Extract Data</button>
+                </div>
+                <!-- Admin Content -->
+                <div class="lg:col-span-3">
+                    <!-- Inventory Import Subtab -->
+                    <div id="admin-panel-inventory" class="gold-card rounded-2xl p-8 shadow-sm">
+                        <h2 class="text-xl font-bold text-gray-900 mb-2">Bulk Import Inventory</h2>
+                        <p class="text-xs text-gray-500 mb-8">Upload an .xlsx file to bulk import gemstones into your stock.</p>
+                        
+                        <div class="border-2 border-dashed border-gold-border rounded-2xl p-12 text-center bg-gray-50/50">
+                            <input type="file" id="import-excel" accept=".xlsx, .xls" class="hidden">
+                            <label for="import-excel" class="cursor-pointer flex flex-col items-center">
+                                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-gold-border mb-4 text-[#D4AF37]">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700">Choose Inventory File</span>
+                                <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest">Supports .xlsx and .xls</span>
+                            </label>
+                            <div id="import-status" class="mt-6 hidden">
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                                    <div id="import-progress" class="bg-[#D4AF37] h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                                </div>
+                                <p id="import-message" class="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest">Processing...</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 p-4 bg-[#F9F6EE] rounded-xl border border-gold-border">
+                            <h3 class="text-[10px] font-bold text-[#B8860B] uppercase tracking-widest mb-3">Expected Column Headers:</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[9px] font-mono text-gray-500">
+                                <div>• lotName</div><div>• type</div><div>• quantity</div><div>• weight</div><div>• color</div><div>• buyingCurrency</div><div>• buyingPrice</div><div>• purchaseDate</div><div>• share</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Import Subtab -->
+                    <div id="admin-panel-transactions" class="gold-card rounded-2xl p-8 shadow-sm hidden">
+                        <h2 class="text-xl font-bold text-gray-900 mb-2 text-green-700">Import Historical Transactions</h2>
+                        <p class="text-xs text-gray-500 mb-8">Upload an .xlsx file to bulk record historical sales or purchases.</p>
+                        
+                        <div class="border-2 border-dashed border-green-200 rounded-2xl p-12 text-center bg-green-50/30">
+                            <input type="file" id="import-trans-excel" accept=".xlsx, .xls" class="hidden">
+                            <label for="import-trans-excel" class="cursor-pointer flex flex-col items-center">
+                                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-green-200 mb-4 text-green-600">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700">Choose Transaction File</span>
+                                <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest">Records will appear in Registry</span>
+                            </label>
+                            <div id="import-trans-status" class="mt-6 hidden">
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                                    <div id="import-trans-progress" class="bg-green-600 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                                </div>
+                                <p id="import-trans-message" class="text-[10px] font-bold text-green-600 uppercase tracking-widest">Processing...</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 p-4 bg-green-50 rounded-xl border border-green-100">
+                            <h3 class="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-3">Expected Column Headers:</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[9px] font-mono text-green-600">
+                                <div>• action (Default: SELL)</div><div>• lotName</div><div>• type</div><div>• quantity</div><div>• weight</div><div>• color</div><div>• salePrice</div><div>• saleDate</div><div>• share</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extract Subtab -->
+                    <div id="admin-panel-extract" class="gold-card rounded-2xl p-8 shadow-sm hidden">
+                        <h2 class="text-xl font-bold text-gray-900 mb-2">Extract Data Reports</h2>
+                        <p class="text-xs text-gray-500 mb-8">Export your database records to Excel files for reporting or local backups.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <button onclick="extractTransactions()" class="flex flex-col items-center justify-center p-8 border border-gold-border rounded-2xl bg-white hover:bg-gold-light/20 transition-all group">
+                                <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <span class="text-sm font-bold text-gray-800 uppercase tracking-widest">Extract Transactions</span>
+                                <span class="text-[9px] text-gray-400 mt-1">Export full history to .xlsx</span>
+                            </button>
+
+                            <button onclick="extractStock()" class="flex flex-col items-center justify-center p-8 border border-gold-border rounded-2xl bg-white hover:bg-gold-light/20 transition-all group">
+                                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <span class="text-sm font-bold text-gray-800 uppercase tracking-widest">Extract Stock</span>
+                                <span class="text-[9px] text-gray-400 mt-1">Export current vault to .xlsx</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- Modal: Purchase Form -->
+    <!-- Modals (Purchase & Sale) -->
     <div id="main-modal" class="fixed inset-0 bg-gray-900/40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
         <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] border-t-4 border-[#D4AF37]">
             <div class="px-8 py-5 border-b border-gold-border flex justify-between items-center bg-[#F9F6EE]">
@@ -271,9 +485,9 @@
 
     <!-- Sale Modal -->
     <div id="sell-modal" class="fixed inset-0 bg-gray-900/40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md overflow-hidden p-8 border-t-4 border-green-600 shadow-2xl">
+        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-md overflow-hidden p-8 border-t-4 border-green-600 shadow-2xl">
             <h3 class="text-2xl font-bold text-gray-900 mb-2">Record Sale</h3>
-            <p id="sell-item-info" class="text-sm text-gray-500 mb-8 font-serif"></p>
+            <p id="sell-item-info" class="text-sm text-gray-500 mb-4 font-serif"></p>
             <div class="space-y-6">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1.5">
@@ -291,6 +505,10 @@
                     <label class="text-[9px] font-bold text-[#D4AF37] uppercase tracking-widest">Sale Price (Total)</label>
                     <input type="number" id="sell-price" step="0.01" placeholder="Enter total amount" class="w-full px-4 py-3 border border-gold-border rounded-xl outline-none focus:ring-1 focus:ring-[#D4AF37]">
                 </div>
+                <div class="space-y-1.5">
+                    <label class="text-[9px] font-bold text-[#D4AF37] uppercase tracking-widest">Share (%)</label>
+                    <input type="text" id="sell-share" placeholder="100%" class="w-full px-4 py-3 border border-gold-border rounded-xl outline-none focus:ring-1 focus:ring-[#D4AF37]">
+                </div>
                 <div class="flex flex-col gap-3 pt-2">
                     <button onclick="confirmSell()" class="w-full py-4 bg-green-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-green-100">Confirm & Deduct</button>
                     <button onclick="closeSellModal()" class="w-full py-4 bg-gray-50 text-gray-500 rounded-xl font-bold uppercase tracking-widest text-xs">Cancel</button>
@@ -302,7 +520,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, query, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, query, onSnapshot, addDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB6eM6AdieHc_ZTA5VMqi5BYrWFh4qQ_Ys",
@@ -316,7 +534,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
         const appId = "1:106916539773:web:ff4e7d3a6f6d89097cf014"; 
 
         let stock = [];
@@ -326,6 +543,60 @@
         const STOCK_PATH = ['artifacts', appId, 'public', 'data', 'stock'];
         const TRANS_PATH = ['artifacts', appId, 'public', 'data', 'transactions'];
 
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                onSnapshot(collection(db, ...STOCK_PATH), (s) => {
+                    stock = s.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderStock();
+                    updateFilters();
+                    calculateFinancials();
+                    document.getElementById('loading-screen').classList.add('hidden');
+                });
+                
+                onSnapshot(collection(db, ...TRANS_PATH), (s) => {
+                    transactions = s.docs.map(d => ({ id: d.id, ...d.data() }));
+                    transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                    renderTransactions();
+                    calculateFinancials();
+                });
+            } else {
+                signInAnonymously(auth);
+            }
+        });
+
+        // Tab Management
+        window.switchTab = (tab) => {
+            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
+            document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
+            document.getElementById('view-financials').classList.toggle('hidden', tab !== 'financials');
+            document.getElementById('view-admin').classList.toggle('hidden', tab !== 'admin');
+            
+            ['list', 'transactions', 'financials', 'admin'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) btn.className = tab === t ? 'py-2 text-[10px] font-bold transition-all tab-active uppercase tracking-widest whitespace-nowrap' : 'py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap';
+            });
+            if (tab === 'financials') calculateFinancials();
+        };
+
+        window.switchAdminSubTab = (sub) => {
+            document.getElementById('admin-panel-inventory').classList.toggle('hidden', sub !== 'inventory');
+            document.getElementById('admin-panel-transactions').classList.toggle('hidden', sub !== 'transactions');
+            document.getElementById('admin-panel-extract').classList.toggle('hidden', sub !== 'extract');
+            
+            const btnInv = document.getElementById('admin-subtab-inventory');
+            const btnTrans = document.getElementById('admin-subtab-transactions');
+            const btnExt = document.getElementById('admin-subtab-extract');
+
+            [btnInv, btnTrans, btnExt].forEach(b => {
+                b.className = "w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all";
+            });
+
+            const activeBtn = sub === 'inventory' ? btnInv : sub === 'transactions' ? btnTrans : btnExt;
+            const activeColor = sub === 'transactions' ? 'text-green-700 bg-green-50 border-green-200' : 'text-[#D4AF37] bg-gold-light border-gold-border';
+            activeBtn.className = `w-full text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest border ${activeColor}`;
+        };
+
+        // Date Helpers
         const formatDate = (dateStr) => {
             if (!dateStr) return '--';
             const [year, month, day] = dateStr.split('-');
@@ -342,25 +613,7 @@
             return `${d}/${m}/${y} ${time}`;
         };
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                onSnapshot(collection(db, ...STOCK_PATH), (s) => {
-                    stock = s.docs.map(d => ({ id: d.id, ...d.data() }));
-                    renderStock();
-                    updateFilters();
-                    document.getElementById('loading-screen').classList.add('hidden');
-                }, (err) => console.error(err));
-                
-                onSnapshot(collection(db, ...TRANS_PATH), (s) => {
-                    transactions = s.docs.map(d => ({ id: d.id, ...d.data() }));
-                    transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-                    renderTransactions();
-                }, (err) => console.error(err));
-            } else {
-                signInAnonymously(auth);
-            }
-        });
-
+        // Render Functions
         window.renderStock = () => {
             const container = document.getElementById('stock-container');
             const search = document.getElementById('search-input').value.toLowerCase();
@@ -382,7 +635,6 @@
                     else if (weightFilter === "3-5") matchesWeight = w > 3 && w <= 5;
                     else if (weightFilter === "5+") matchesWeight = w > 5;
                 }
-
                 return matchesSearch && matchesType && matchesQuality && matchesWeight;
             });
 
@@ -400,7 +652,6 @@
                 const row = document.createElement('tr');
                 row.className = "group hover:bg-[#FDF7E2] transition-colors data-row cursor-pointer relative";
                 row.onclick = (e) => { if (e.target.closest('button')) return; openModal('edit', item.id); };
-                
                 row.innerHTML = `
                     <td class="px-8 py-6 data-cell">
                         <span class="mobile-label">Identity</span>
@@ -419,7 +670,7 @@
                     <td class="px-8 py-6 data-cell">
                         <span class="mobile-label">Purchased</span>
                         <div class="flex flex-col text-sm">
-                            <span class="font-bold text-gray-800">${item.buyingCurrency || 'USD'} ${Number(item.buyingPrice).toLocaleString()}</span>
+                            <span class="font-bold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span>
                             <span class="text-[10px] text-gray-400 font-mono">${formatDate(item.purchaseDate)}</span>
                         </div>
                     </td>
@@ -443,35 +694,18 @@
         window.updateFilters = () => {
             const types = [...new Set(stock.map(i => i.type).filter(Boolean))];
             const qualities = [...new Set(stock.map(i => i.color).filter(Boolean))];
-            
             const filterType = document.getElementById('filter-type');
             const filterQuality = document.getElementById('filter-quality');
-            const dataList = document.getElementById('type-suggestions');
-            
-            const currentType = filterType.value;
-            const currentQuality = filterQuality.value;
+            const currentT = filterType.value;
+            const currentQ = filterQuality.value;
 
-            filterType.innerHTML = '<option value="">All Variety</option>';
-            filterQuality.innerHTML = '<option value="">All Grades</option>';
-            dataList.innerHTML = '';
-
-            types.forEach(t => {
-                filterType.innerHTML += `<option value="${t}" ${t === currentType ? 'selected' : ''}>${t}</option>`;
-                dataList.innerHTML += `<option value="${t}">`;
-            });
-
-            qualities.forEach(q => {
-                filterQuality.innerHTML += `<option value="${q}" ${q === currentQuality ? 'selected' : ''}>${q}</option>`;
-            });
+            if (filterType) filterType.innerHTML = '<option value="">All Variety</option>' + types.map(t => `<option value="${t}" ${t===currentT?'selected':''}>${t}</option>`).join('');
+            if (filterQuality) filterQuality.innerHTML = '<option value="">All Grades</option>' + qualities.map(q => `<option value="${q}" ${q===currentQ?'selected':''}>${q}</option>`).join('');
+            const typeSug = document.getElementById('type-suggestions');
+            if (typeSug) typeSug.innerHTML = types.map(t => `<option value="${t}">`).join('');
         };
 
-        window.switchTab = (tab) => {
-            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
-            document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
-            document.getElementById('tab-list').className = tab === 'list' ? 'py-2 text-sm font-semibold transition-all tab-active uppercase tracking-widest' : 'py-2 text-sm font-semibold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest';
-            document.getElementById('tab-transactions').className = tab === 'transactions' ? 'py-2 text-sm font-semibold transition-all tab-active uppercase tracking-widest' : 'py-2 text-sm font-semibold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest';
-        };
-
+        // Inventory Management Logic
         window.openModal = (mode, id = null) => {
             const form = document.getElementById('inventory-form');
             form.reset();
@@ -489,6 +723,7 @@
                 document.getElementById('edit-id').value = '';
                 document.getElementById('purchaseDate').valueAsDate = new Date();
                 document.getElementById('share').value = '100%';
+                document.getElementById('buyingCurrency').value = 'THB';
             }
         };
 
@@ -507,35 +742,36 @@
                 weight: document.getElementById('weight').value,
                 color: document.getElementById('color').value,
                 buyingCurrency: document.getElementById('buyingCurrency').value,
-                buyingPrice: document.getElementById('buyingPrice').value,
+                buyingPrice: parseFloat(document.getElementById('buyingPrice').value),
                 purchaseDate: document.getElementById('purchaseDate').value,
-                share: document.getElementById('share').value,
+                share: document.getElementById('share').value || '100%',
                 notes: document.getElementById('notes').value,
                 updatedAt: serverTimestamp()
             };
             if (id) await updateDoc(doc(db, ...STOCK_PATH, id), data);
             else {
-                const docRef = await addDoc(collection(db, ...STOCK_PATH), data);
-                logTransaction('BUY', data, data.quantity, data.buyingCurrency, data.buyingPrice);
+                await addDoc(collection(db, ...STOCK_PATH), data);
+                logTransaction('BUY', data, data.quantity, data.buyingCurrency, data.buyingPrice, null, data.share);
             }
             closeModal();
         };
 
         window.deleteLot = async () => {
             const id = document.getElementById('edit-id').value;
-            if (id && confirm('This will permanently delete this lot from the system. Confirm?')) {
+            if (id && confirm('Delete this lot permanently?')) {
                 await deleteDoc(doc(db, ...STOCK_PATH, id));
                 closeModal();
             }
         };
 
+        // Sale Logic
         window.openSellModal = (id) => {
             const item = stock.find(i => i.id === id);
             sellTargetId = id;
             document.getElementById('sell-item-info').innerText = `Recording sale for ${item.lotName}. Stock: ${item.quantity}.`;
             document.getElementById('sell-qty').max = item.quantity;
             document.getElementById('sell-qty').value = 1;
-            document.getElementById('sell-price').value = '';
+            document.getElementById('sell-share').value = item.share || '100%';
             document.getElementById('sell-modal').classList.remove('hidden');
         };
 
@@ -543,53 +779,98 @@
 
         window.confirmSell = async () => {
             const qty = parseInt(document.getElementById('sell-qty').value);
-            const price = document.getElementById('sell-price').value; 
+            const price = parseFloat(document.getElementById('sell-price').value); 
             const currency = document.getElementById('sell-currency').value;
+            const shareInput = document.getElementById('sell-share').value || '100%';
             const item = stock.find(i => i.id === sellTargetId);
-            
-            if (!item || qty <= 0 || qty > item.quantity) return;
-            if (!price) {
-                alert("Please enter a total sale price.");
-                return;
-            }
+            if (!item || qty <= 0 || qty > item.quantity || isNaN(price)) return;
 
             const stockDoc = doc(db, ...STOCK_PATH, sellTargetId);
             if (item.quantity === qty) await deleteDoc(stockDoc);
             else await updateDoc(stockDoc, { quantity: item.quantity - qty });
             
-            logTransaction('SELL', item, qty, currency, price);
+            const shareCost = (item.buyingPrice / item.quantity) * qty;
+            logTransaction('SELL', item, qty, currency, price, null, shareInput, shareCost);
             closeSellModal();
         };
 
-        async function logTransaction(action, item, qty, currency, price) {
-            await addDoc(collection(db, ...TRANS_PATH), {
+        async function logTransaction(action, item, qty, currency, price, manualTimestamp = null, shareVal = '100%', originalCost = 0) {
+            const data = {
                 action, 
                 lotName: item.lotName, 
                 type: item.type, 
                 weight: item.weight || '0',
                 color: item.color || '',
                 quantity: qty,
+                price: parseFloat(price),
+                currency: currency,
+                share: shareVal,
+                originalCost: originalCost,
                 totalValue: `${currency} ${Number(price).toLocaleString()}`,
-                timestamp: serverTimestamp()
-            });
+                timestamp: manualTimestamp ? Timestamp.fromDate(new Date(manualTimestamp)) : serverTimestamp()
+            };
+            await addDoc(collection(db, ...TRANS_PATH), data);
         }
 
         window.renderTransactions = () => {
             const tbody = document.getElementById('transaction-body');
             const groupBy = document.getElementById('group-by').value;
+            const search = document.getElementById('trans-search').value.toLowerCase();
+            const actionFilter = document.getElementById('trans-filter-action').value;
+            const dateFilter = document.getElementById('trans-filter-date').value;
+            const sortBy = document.getElementById('trans-sort-by').value;
             
+            if (!tbody) return;
             tbody.innerHTML = '';
+            
+            let filtered = transactions.filter(t => {
+                const matchesSearch = (t.lotName || "").toLowerCase().includes(search);
+                const matchesAction = actionFilter === "" || t.action === actionFilter;
+                
+                let matchesDate = true;
+                if (dateFilter !== 'all') {
+                    const tDate = t.timestamp ? t.timestamp.toDate() : new Date(0);
+                    const now = new Date();
+                    const today = new Date(now.setHours(0,0,0,0));
+                    
+                    if (dateFilter === 'today') matchesDate = tDate >= today;
+                    else if (dateFilter === 'yesterday') {
+                        const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+                        matchesDate = tDate >= yesterday && tDate < today;
+                    } else if (dateFilter === '7days') {
+                        const past = new Date(today); past.setDate(past.getDate() - 7);
+                        matchesDate = tDate >= past;
+                    } else if (dateFilter === '30days') {
+                        const past = new Date(today); past.setDate(past.getDate() - 30);
+                        matchesDate = tDate >= past;
+                    } else if (dateFilter === '3months') {
+                        const past = new Date(today); past.setMonth(past.getMonth() - 3);
+                        matchesDate = tDate >= past;
+                    } else if (dateFilter === '6months') {
+                        const past = new Date(today); past.setMonth(past.getMonth() - 6);
+                        matchesDate = tDate >= past;
+                    } else if (dateFilter === '12months') {
+                        const past = new Date(today); past.setMonth(past.getMonth() - 12);
+                        matchesDate = tDate >= past;
+                    }
+                }
+                return matchesSearch && matchesAction && matchesDate;
+            });
 
-            let dataToRender = [...transactions];
-
+            filtered.sort((a, b) => {
+                if (sortBy === 'date-desc') return (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0);
+                if (sortBy === 'date-asc') return (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0);
+                if (sortBy === 'lot-asc') return (a.lotName || "").localeCompare(b.lotName || "");
+                return 0;
+            });
+            
             if (groupBy !== 'none') {
-                const groups = dataToRender.reduce((acc, t) => {
+                const groups = filtered.reduce((acc, t) => {
                     const key = t[groupBy] || "Other";
                     if (!acc[key]) acc[key] = [];
                     acc[key].push(t);
                     return acc;
                 }, {});
-
                 for (let group in groups) {
                     const h = document.createElement('tr');
                     h.className = "bg-gold-light font-bold";
@@ -598,7 +879,7 @@
                     groups[group].forEach(t => appendTransRow(tbody, t));
                 }
             } else {
-                dataToRender.forEach(t => appendTransRow(tbody, t));
+                filtered.forEach(t => appendTransRow(tbody, t));
             }
         };
 
@@ -612,15 +893,209 @@
                 <td class="px-8 py-5">
                     <div class="flex flex-col">
                         <span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span>
-                        <span class="text-[9px] text-gray-400 uppercase tracking-tighter">
-                            ${t.type || 'Standard'} • ${t.weight || '0'} CT • ${t.color || 'Standard Grade'}
-                        </span>
+                        <span class="text-[9px] text-gray-400 uppercase tracking-tighter">${t.type || 'Standard'} • ${t.weight || '0'} CT • ${t.color || 'Standard Grade'} • Share: ${t.share || '100%'}</span>
                     </div>
                 </td>
                 <td class="px-8 py-5 text-center font-black text-gray-600">${t.quantity || 0}</td>
                 <td class="px-8 py-5 font-bold text-gray-900">${t.totalValue || 'N/A'}</td>`;
             parent.appendChild(row);
         }
+
+        // FINANCIAL CALCULATIONS
+        function parseShare(shareStr) {
+            if (!shareStr) return 1.0;
+            const match = shareStr.match(/(\d+)%/);
+            if (match) return parseInt(match[1]) / 100;
+            return 1.0;
+        }
+
+        window.calculateFinancials = () => {
+            let shareSales = 0;
+            let shareCost = 0;
+            let currentAssetValue = 0;
+
+            transactions.forEach(t => {
+                if (t.action === 'SELL') {
+                    const sharePerc = parseShare(t.share);
+                    shareSales += (t.price || 0) * sharePerc;
+                    shareCost += (t.originalCost || 0) * sharePerc;
+                }
+            });
+
+            const now = new Date();
+            let ageNew = 0;
+            let ageMid = 0;
+            let ageOld = 0;
+
+            stock.forEach(s => {
+                const val = parseFloat(s.buyingPrice || 0);
+                currentAssetValue += val;
+
+                const pDate = new Date(s.purchaseDate);
+                const diffMonths = (now.getFullYear() - pDate.getFullYear()) * 12 + (now.getMonth() - pDate.getMonth());
+                
+                if (diffMonths <= 6) ageNew += val;
+                else if (diffMonths <= 12) ageMid += val;
+                else ageOld += val;
+            });
+
+            const salesEl = document.getElementById('fin-total-sales');
+            const costEl = document.getElementById('fin-total-cost');
+            const assetEl = document.getElementById('fin-asset-value');
+            if (salesEl) salesEl.innerText = `THB ${shareSales.toLocaleString()}`;
+            if (costEl) costEl.innerText = `THB ${shareCost.toLocaleString()}`;
+            if (assetEl) assetEl.innerText = `THB ${currentAssetValue.toLocaleString()}`;
+
+            const profit = shareSales - shareCost;
+            const profitEl = document.getElementById('fin-net-profit');
+            const profitCard = document.getElementById('fin-profit-card');
+            if (profitEl) {
+                profitEl.innerText = `THB ${profit.toLocaleString()}`;
+                profitEl.className = `text-2xl font-black ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            }
+            if (profitCard) profitCard.style.borderLeftColor = profit >= 0 ? '#10b981' : '#ef4444';
+
+            const turnoverContainer = document.getElementById('turnover-container');
+            if (turnoverContainer) {
+                const varieties = [...new Set([...stock.map(s => s.type), ...transactions.map(t => t.type)])].filter(Boolean);
+                const metrics = varieties.map(v => {
+                    const sold = transactions.filter(t => t.action === 'SELL' && t.type === v).reduce((acc, t) => acc + (t.quantity || 0), 0);
+                    const current = stock.filter(s => s.type === v).reduce((acc, s) => acc + (s.quantity || 0), 0);
+                    return { variety: v, sold, current };
+                }).sort((a, b) => b.sold - a.sold);
+
+                turnoverContainer.innerHTML = metrics.map(m => `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                        <div>
+                            <span class="text-xs font-bold text-gray-800 uppercase tracking-widest">${m.variety}</span>
+                            <p class="text-[9px] text-gray-400 mt-1 uppercase">Sold: ${m.sold} / In Stock: ${m.current}</p>
+                        </div>
+                        <span class="px-3 py-1 bg-white border border-gold-border rounded-lg text-[10px] font-bold text-[#D4AF37]">
+                            ${m.sold > 0 ? ((m.sold / (m.sold + m.current)) * 100).toFixed(0) + '%' : '0%'} MVMT
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            const maxAge = Math.max(ageNew, ageMid, ageOld, 1);
+            if (document.getElementById('age-new-val')) {
+                document.getElementById('age-new-val').innerText = `THB ${ageNew.toLocaleString()}`;
+                document.getElementById('age-mid-val').innerText = `THB ${ageMid.toLocaleString()}`;
+                document.getElementById('age-old-val').innerText = `THB ${ageOld.toLocaleString()}`;
+                document.getElementById('age-new-bar').style.width = `${(ageNew / maxAge) * 100}%`;
+                document.getElementById('age-mid-bar').style.width = `${(ageMid / maxAge) * 100}%`;
+                document.getElementById('age-old-bar').style.width = `${(ageOld / maxAge) * 100}%`;
+            }
+        };
+
+        // Extract Functions
+        window.extractTransactions = () => {
+            if (transactions.length === 0) return;
+            const exportData = transactions.map(t => ({
+                'Date': formatDateTime(t.timestamp),
+                'Action': t.action,
+                'Lot Name': t.lotName,
+                'Variety': t.type,
+                'Quantity': t.quantity,
+                'Weight (CT)': t.weight,
+                'Color/Grade': t.color,
+                'Currency': t.currency,
+                'Price': t.price,
+                'Share': t.share,
+                'Realized Cost (Base)': t.originalCost || 0
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+            XLSX.writeFile(wb, `Nawarat_Transactions_${new Date().toISOString().split('T')[0]}.xlsx`);
+        };
+
+        window.extractStock = () => {
+            if (stock.length === 0) return;
+            const exportData = stock.map(s => ({
+                'Lot Name': s.lotName,
+                'Variety': s.type,
+                'Quantity': s.quantity,
+                'Weight (CT)': s.weight,
+                'Color/Grade': s.color,
+                'Buying Currency': s.buyingCurrency,
+                'Buying Price (Total)': s.buyingPrice,
+                'Purchase Date': s.purchaseDate,
+                'Share': s.share,
+                'Notes': s.notes || ''
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Inventory");
+            XLSX.writeFile(wb, `Nawarat_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+        };
+
+        // Import Handlers
+        document.getElementById('import-excel').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const status = document.getElementById('import-status');
+            const progress = document.getElementById('import-progress');
+            const message = document.getElementById('import-message');
+            status.classList.remove('hidden');
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
+                const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                const today = new Date().toISOString().split('T')[0];
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    let pDate = row.purchaseDate ? (row.purchaseDate instanceof Date ? row.purchaseDate.toISOString().split('T')[0] : String(row.purchaseDate)) : today;
+                    await addDoc(collection(db, ...STOCK_PATH), {
+                        lotName: String(row.lotName || 'Imported Lot'),
+                        type: String(row.type || 'Standard'),
+                        quantity: parseInt(row.quantity || 0),
+                        weight: String(row.weight || '0'),
+                        color: String(row.color || 'Standard Grade'),
+                        buyingCurrency: String(row.buyingCurrency || 'THB'),
+                        buyingPrice: parseFloat(row.buyingPrice || 0),
+                        purchaseDate: pDate,
+                        share: String(row.share || '100%'),
+                        notes: String(row.notes || ''),
+                        updatedAt: serverTimestamp()
+                    });
+                    progress.style.width = `${Math.round(((i + 1) / data.length) * 100)}%`;
+                    message.innerText = `Importing Inventory: ${i + 1} / ${data.length}`;
+                }
+                message.innerText = `Success: ${data.length} items imported.`;
+            };
+            reader.readAsBinaryString(file);
+        });
+
+        document.getElementById('import-trans-excel').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const status = document.getElementById('import-trans-status');
+            const progress = document.getElementById('import-trans-progress');
+            const message = document.getElementById('import-trans-message');
+            status.classList.remove('hidden');
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
+                const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const action = (row.action || "SELL").toUpperCase();
+                    const sDate = row.saleDate ? (row.saleDate instanceof Date ? row.saleDate : new Date(row.saleDate)) : new Date();
+                    const itemStub = {
+                        lotName: String(row.lotName || 'Unnamed Lot'),
+                        type: String(row.type || 'Standard'),
+                        weight: String(row.weight || '0'),
+                        color: String(row.color || '')
+                    };
+                    await logTransaction(action, itemStub, parseInt(row.quantity || 1), "THB", row.salePrice || 0, sDate, row.share || '100%', row.originalCost || 0);
+                    progress.style.width = `${Math.round(((i + 1) / data.length) * 100)}%`;
+                    message.innerText = `Importing History: ${i + 1} / ${data.length}`;
+                }
+                message.innerText = `Success: ${data.length} transactions recorded.`;
+            };
+            reader.readAsBinaryString(file);
+        });
     </script>
 </body>
 </html>
