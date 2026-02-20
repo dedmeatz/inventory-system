@@ -98,6 +98,14 @@
             #view-transactions thead {
                 display: none;
             }
+
+            /* Floating Filter for Mobile */
+            #filter-controls-container {
+                display: none; /* Hide standard grid on mobile */
+            }
+            #mobile-filter-overlay.active {
+                display: flex !important;
+            }
         }
 
         .gold-card {
@@ -156,7 +164,9 @@
                             New Purchase
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+                    <!-- Desktop Filter Grid (Hidden on Mobile) -->
+                    <div id="filter-controls-container" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <select id="filter-type" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Variety</option>
                         </select>
@@ -176,6 +186,27 @@
                             <option value="weight">Weight (High-Low)</option>
                             <option value="quantity">Stock Level</option>
                         </select>
+                    </div>
+
+                    <!-- Mobile Floating Filter Button & Popup -->
+                    <div id="mobile-filter-trigger" class="sm:hidden fixed bottom-24 left-6 z-50">
+                        <button onclick="toggleMobileFilter()" class="h-14 w-14 rounded-full bg-white/80 backdrop-blur-md border border-gold-border shadow-xl flex items-center justify-center text-[#D4AF37]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                        </button>
+                    </div>
+
+                    <div id="mobile-filter-overlay" class="hidden fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px] items-end justify-center p-4 sm:hidden" onclick="toggleMobileFilter()">
+                        <div class="bg-white/90 backdrop-blur-lg w-full rounded-2xl p-6 border border-gold-border shadow-2xl space-y-4" onclick="event.stopPropagation()">
+                            <div class="flex justify-between items-center border-b border-gold-border pb-3 mb-2">
+                                <h4 class="text-[10px] font-bold uppercase tracking-widest text-[#B8860B]">Filter & Sort</h4>
+                                <button onclick="toggleMobileFilter()" class="text-gray-400">&times;</button>
+                            </div>
+                            <!-- Teleported Selects for Mobile -->
+                            <div id="mobile-filter-slots" class="grid grid-cols-1 gap-4">
+                                <!-- JS will move selects here on mobile if needed, or we just duplicate IDs (not recommended) -->
+                                <!-- We will target the same IDs, they just move position -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -584,6 +615,9 @@
                     updateFilters();
                     calculateFinancials();
                     document.getElementById('loading-screen').classList.add('hidden');
+                    
+                    // Initial mobile placement check
+                    adjustFiltersForMobile();
                 }, (err) => console.error(err));
                 
                 onSnapshot(collection(db, ...TRANS_PATH), (s) => {
@@ -604,12 +638,42 @@
             document.getElementById('view-financials').classList.toggle('hidden', tab !== 'financials');
             document.getElementById('view-admin').classList.toggle('hidden', tab !== 'admin');
             
+            // Toggle visibility of floating filter button based on tab
+            const mobileFilterTrigger = document.getElementById('mobile-filter-trigger');
+            if (mobileFilterTrigger) {
+                mobileFilterTrigger.style.display = (tab === 'list') ? 'block' : 'none';
+            }
+
             ['list', 'transactions', 'financials', 'admin'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 if (btn) btn.className = tab === t ? 'py-2 text-[10px] font-bold transition-all tab-active uppercase tracking-widest whitespace-nowrap' : 'py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap';
             });
             if (tab === 'financials') calculateFinancials();
         };
+
+        // Mobile Filter Toggle
+        window.toggleMobileFilter = () => {
+            const overlay = document.getElementById('mobile-filter-overlay');
+            overlay.classList.toggle('active');
+            overlay.classList.toggle('hidden');
+        };
+
+        function adjustFiltersForMobile() {
+            const isMobile = window.innerWidth < 640;
+            const container = document.getElementById('filter-controls-container');
+            const mobileSlots = document.getElementById('mobile-filter-slots');
+            
+            if (isMobile && mobileSlots.children.length === 0) {
+                // Move selectors to mobile slot
+                const selectors = Array.from(container.children);
+                selectors.forEach(s => mobileSlots.appendChild(s));
+            } else if (!isMobile && container.children.length === 0) {
+                // Move selectors back to desktop grid
+                const selectors = Array.from(mobileSlots.children);
+                selectors.forEach(s => container.appendChild(s));
+            }
+        }
+        window.addEventListener('resize', adjustFiltersForMobile);
 
         window.switchAdminSubTab = (sub) => {
             document.getElementById('admin-panel-inventory').classList.toggle('hidden', sub !== 'inventory');
@@ -688,11 +752,15 @@
 
         window.renderStock = () => {
             const container = document.getElementById('stock-container');
-            const search = document.getElementById('search-input').value.toLowerCase();
-            const typeFilter = document.getElementById('filter-type').value;
-            const weightFilter = document.getElementById('filter-weight').value;
-            const qualityFilter = document.getElementById('filter-quality').value;
-            const sortBy = document.getElementById('sort-by').value;
+            const searchInput = document.getElementById('search-input');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            // Support finding selects in either desktop or mobile containers
+            const getVal = (id) => document.getElementById(id)?.value || "";
+            const typeFilter = getVal('filter-type');
+            const weightFilter = getVal('filter-weight');
+            const qualityFilter = getVal('filter-quality');
+            const sortBy = getVal('sort-by');
 
             let filtered = stock.filter(item => {
                 const matchesSearch = (item.lotName || "").toLowerCase().includes(search) || (item.type || "").toLowerCase().includes(search);
