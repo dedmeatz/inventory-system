@@ -54,7 +54,6 @@
                 letter-spacing: 0.05em;
                 min-width: 80px;
             }
-            /* Applied to both stock and transaction rows */
             .data-row { 
                 display: flex !important;
                 flex-direction: column; 
@@ -87,7 +86,6 @@
                 border-top: 1px solid var(--gold-border);
                 box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
             }
-            /* Ensure the transaction table container shows rows correctly */
             #transaction-body {
                 display: block;
                 padding: 1rem;
@@ -98,10 +96,8 @@
             #view-transactions thead {
                 display: none;
             }
-
-            /* Floating Filter for Mobile */
             #filter-controls-container {
-                display: none; /* Hide standard grid on mobile */
+                display: none;
             }
             #mobile-filter-overlay.active {
                 display: flex !important;
@@ -111,6 +107,20 @@
         .gold-card {
             border: 1px solid var(--gold-border);
             background: white;
+        }
+
+        /* Accordion Styles */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .accordion-item.active .accordion-content {
+            max-height: 1000px;
+            transition: max-height 0.5s ease-in;
+        }
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -165,7 +175,6 @@
                         </button>
                     </div>
 
-                    <!-- Desktop Filter Grid (Hidden on Mobile) -->
                     <div id="filter-controls-container" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <select id="filter-type" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Variety</option>
@@ -188,7 +197,6 @@
                         </select>
                     </div>
 
-                    <!-- Mobile Floating Filter Button & Popup -->
                     <div id="mobile-filter-trigger" class="sm:hidden fixed bottom-24 left-6 z-50">
                         <button onclick="toggleMobileFilter()" class="h-14 w-14 rounded-full bg-white/80 backdrop-blur-md border border-gold-border shadow-xl flex items-center justify-center text-[#D4AF37]">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
@@ -201,11 +209,7 @@
                                 <h4 class="text-[10px] font-bold uppercase tracking-widest text-[#B8860B]">Filter & Sort</h4>
                                 <button onclick="toggleMobileFilter()" class="text-gray-400">&times;</button>
                             </div>
-                            <!-- Teleported Selects for Mobile -->
-                            <div id="mobile-filter-slots" class="grid grid-cols-1 gap-4">
-                                <!-- JS will move selects here on mobile if needed, or we just duplicate IDs (not recommended) -->
-                                <!-- We will target the same IDs, they just move position -->
-                            </div>
+                            <div id="mobile-filter-slots" class="grid grid-cols-1 gap-4"></div>
                         </div>
                     </div>
                 </div>
@@ -223,14 +227,10 @@
                                 <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em] text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="stock-container" class="divide-y divide-[#FDF7E2]">
-                            <!-- Rows injected here -->
-                        </tbody>
+                        <tbody id="stock-container" class="divide-y divide-[#FDF7E2]"></tbody>
                     </table>
                 </div>
-                <div id="stock-pagination" class="pagination-container border-t border-gold-border bg-[#F9F6EE]/30 px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <!-- Stock pagination buttons here -->
-                </div>
+                <div id="stock-pagination" class="pagination-container border-t border-gold-border bg-[#F9F6EE]/30 px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"></div>
                 <div id="empty-state" class="hidden py-24 text-center">
                     <p class="text-gray-400 italic font-serif text-lg">Inventory vault is currently empty.</p>
                 </div>
@@ -239,7 +239,6 @@
 
         <!-- Tab: Transactions View -->
         <div id="view-transactions" class="hidden">
-            <!-- Search & Filter Controls for Transactions -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div class="relative">
                     <input type="text" id="trans-search" oninput="resetTransPage(); renderTransactions()" placeholder="Search lot number..." class="w-full pl-4 pr-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none text-sm bg-white shadow-sm">
@@ -264,7 +263,6 @@
             </div>
 
             <div class="gold-card rounded-2xl shadow-sm overflow-hidden">
-                <!-- Mobile ONLY: title hidden -->
                 <div class="p-6 border-b border-gold-border bg-[#F9F6EE] hidden sm:flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                     <div>
                         <h2 class="text-xl font-bold text-gray-900">Transaction Registry</h2>
@@ -284,15 +282,12 @@
                         <tbody id="transaction-body" class="divide-y divide-[#FDF7E2]"></tbody>
                     </table>
                 </div>
-                <div id="trans-pagination" class="pagination-container border-t border-gold-border bg-[#F9F6EE]/30 px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <!-- Transaction pagination buttons here -->
-                </div>
+                <div id="trans-pagination" class="pagination-container border-t border-gold-border bg-[#F9F6EE]/30 px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"></div>
             </div>
         </div>
 
         <!-- Tab: Financials View -->
         <div id="view-financials" class="hidden space-y-8">
-            <!-- 1. Executive Summary -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="gold-card rounded-2xl p-6 shadow-sm border-l-4 border-green-500">
                     <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Share Sales</h3>
@@ -311,7 +306,6 @@
                 </div>
             </div>
 
-            <!-- 2. Inventory Valuation -->
             <div class="gold-card rounded-2xl p-8 shadow-sm">
                 <div class="flex items-center justify-between mb-6">
                     <div>
@@ -330,17 +324,12 @@
                 </div>
             </div>
 
-            <!-- 3. Performance & Aging -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Turnover Rate -->
                 <div class="gold-card rounded-2xl p-8 shadow-sm">
                     <h2 class="text-xl font-bold text-gray-900 mb-6">Turnover Rate</h2>
-                    <div id="turnover-container" class="space-y-4">
-                        <!-- Variety rows injected here -->
-                    </div>
+                    <div id="turnover-container" class="space-y-4"></div>
                 </div>
 
-                <!-- Aging Analysis -->
                 <div class="gold-card rounded-2xl p-8 shadow-sm">
                     <h2 class="text-xl font-bold text-gray-900 mb-6">Aging Analysis</h2>
                     <div class="space-y-6">
@@ -383,10 +372,24 @@
                 <div class="lg:col-span-1 flex flex-col gap-2">
                     <button onclick="switchAdminSubTab('inventory')" id="admin-subtab-inventory" class="w-full text-left px-4 py-3 rounded-xl bg-gold-light text-[#D4AF37] font-bold text-xs uppercase tracking-widest border border-gold-border">Import Inventory</button>
                     <button onclick="switchAdminSubTab('transactions')" id="admin-subtab-transactions" class="w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Import Transactions</button>
+                    <button onclick="switchAdminSubTab('geminfo')" id="admin-subtab-geminfo" class="w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Gem Info</button>
                     <button onclick="switchAdminSubTab('extract')" id="admin-subtab-extract" class="w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Extract Data</button>
                 </div>
+                
                 <!-- Admin Content -->
                 <div class="lg:col-span-3">
+                    <!-- Gem Info Subtab -->
+                    <div id="admin-panel-geminfo" class="hidden space-y-6">
+                        <div class="gold-card rounded-2xl p-8 shadow-sm">
+                            <h2 class="text-xl font-bold text-gray-900 mb-2">Gem Reference Data</h2>
+                            <p class="text-xs text-gray-500 mb-8">Manage dropdown values for consistent data entry.</p>
+                            
+                            <div class="space-y-4" id="gem-info-accordions">
+                                <!-- Accordions will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Inventory Import Subtab -->
                     <div id="admin-panel-inventory" class="gold-card rounded-2xl p-8 shadow-sm">
                         <h2 class="text-xl font-bold text-gray-900 mb-2">Bulk Import Inventory</h2>
@@ -438,35 +441,24 @@
                                 <p id="import-trans-message" class="text-[10px] font-bold text-green-600 uppercase tracking-widest">Processing...</p>
                             </div>
                         </div>
-
-                        <div class="mt-8 p-4 bg-green-50 rounded-xl border border-green-100">
-                            <h3 class="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-3">Expected Column Headers:</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[9px] font-mono text-green-600">
-                                <div>• action (Default: SELL)</div><div>• lotName</div><div>• type</div><div>• quantity</div><div>• weight</div><div>• color</div><div>• salePrice</div><div>• saleDate</div><div>• share</div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Extract Subtab -->
                     <div id="admin-panel-extract" class="gold-card rounded-2xl p-8 shadow-sm hidden">
                         <h2 class="text-xl font-bold text-gray-900 mb-2">Extract Data Reports</h2>
                         <p class="text-xs text-gray-500 mb-8">Export your database records to Excel files for reporting or local backups.</p>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <button onclick="extractTransactions()" class="flex flex-col items-center justify-center p-8 border border-gold-border rounded-2xl bg-white hover:bg-gold-light/20 transition-all group">
                                 <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 </div>
                                 <span class="text-sm font-bold text-gray-800 uppercase tracking-widest">Extract Transactions</span>
-                                <span class="text-[9px] text-gray-400 mt-1">Export full history to .xlsx</span>
                             </button>
-
                             <button onclick="extractStock()" class="flex flex-col items-center justify-center p-8 border border-gold-border rounded-2xl bg-white hover:bg-gold-light/20 transition-all group">
                                 <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 </div>
                                 <span class="text-sm font-bold text-gray-800 uppercase tracking-widest">Extract Stock</span>
-                                <span class="text-[9px] text-gray-400 mt-1">Export current vault to .xlsx</span>
                             </button>
                         </div>
                     </div>
@@ -475,7 +467,7 @@
         </div>
     </main>
 
-    <!-- Modals -->
+    <!-- Modals (Purchase/Edit) -->
     <div id="main-modal" class="fixed inset-0 bg-gray-900/40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
         <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] border-t-4 border-[#D4AF37]">
             <div class="px-8 py-5 border-b border-gold-border flex justify-between items-center bg-[#F9F6EE]">
@@ -579,7 +571,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, query, onSnapshot, addDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, query, onSnapshot, addDoc, serverTimestamp, Timestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB6eM6AdieHc_ZTA5VMqi5BYrWFh4qQ_Ys",
@@ -597,35 +589,60 @@
 
         let stock = [];
         let transactions = [];
+        let gemInfo = {}; // Stores the reference lists
         let sellTargetId = null;
 
-        // Pagination State
         const PAGE_SIZE = 15;
         let stockCurrentPage = 1;
         let transCurrentPage = 1;
 
         const STOCK_PATH = ['artifacts', appId, 'public', 'data', 'stock'];
         const TRANS_PATH = ['artifacts', appId, 'public', 'data', 'transactions'];
+        const GEMINFO_PATH = ['artifacts', appId, 'public', 'data', 'gem_info'];
 
-        onAuthStateChanged(auth, (user) => {
+        // Initial default data if none exists in Firestore
+        const defaultGemInfo = {
+            "Gemstone": ["Alexandrite", "Amber", "Amethyst", "Ametrine", "Aquamarine", "Citrine", "Diamond", "Diamond Synthetic (CVD)", "Diamond Synthetic (HPHT)", "Demantoid", "Emerald", "Emerald No Oil", "Emerald Insignificant", "Emerald Minor", "Emerald Filled", "Fancy Color Diamond", "Garnet", "Jade", "Moonstone", "Morganite", "Opal", "Opal Fire", "Opal Treated", "Paraiba", "Pearl", "Pearl Treated", "Peridot", "Rose Quartz", "Ruby", "Ruby Heat", "Ruby Star", "Sapphire", "Sapphire Color Change", "Sapphire Heat", "Sapphire Star", "Spinel", "Sphene", "Tanzanite", "Topaz", "Tourmaline", "Tourmaline Lagoon", "Turquoise", "Zircon"],
+            "Classification": ["Loose Stone", "Lot", "Rough", "Rough Lot", "Ring", "Necklace", "Ear Rings", "Pendant"],
+            "Country": ["Afghanistan", "Australia", "Brazil", "Cambodia", "China", "Colombia", "Congo", "Ethiopia", "Kenya", "Madagascar", "Mozambique", "Myanmar", "Namibia", "Nigeria", "Pakistan", "Russia", "South Africa", "Sri Lanka", "Tajikistan", "Tanzania", "Thailand", "United States of America", "Venezuela", "Vietnam", "Zambia", "Zimbabwe", "None"],
+            "Color": ["Blue", "Cornflower Blue", "Green", "Hot Pink", "Indigo", "Jedi Pink", "Jedi Red", "Lavender", "Muzo Green", "Orange", "Pastel Blue", "Pastel Pink", "Pastel Red", "Pastel Yellow", "Pigeon Blood", "Pinkish Red", "Purple", "Purplish Red", "Red", "Reddish Orange", "Reddish Pink", "Royal Blue", "Santa Maria Blue", "Sunrise", "Sunset", "Violet", "Yellow"],
+            "Shape": ["Baguette", "Carving", "Cushion", "Emerald", "Heart", "Hexagon", "Marquise", "Octagon", "Oval", "Pear", "Princess", "Radiant", "Rose Cut", "Round", "Shield", "Sugarloaf"],
+            "Cut": ["Brillant", "Step", "Mixed", "Cushion", "Rough", "Tumbled", "Cabochon", "Fancy"],
+            "Status": ["Available", "Pending", "Sold", "Give Broker"],
+            "Certificate": ["AGL", "AIGS", "Bellorophon", "GIA", "GIT", "GRS", "Gubelin", "Guild", "HRD", "IGI", "Lotus", "SSEF", "None"]
+        };
+
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Listen to Stock
                 onSnapshot(collection(db, ...STOCK_PATH), (s) => {
                     stock = s.docs.map(d => ({ id: d.id, ...d.data() }));
                     renderStock();
                     updateFilters();
                     calculateFinancials();
                     document.getElementById('loading-screen').classList.add('hidden');
-                    
-                    // Initial mobile placement check
                     adjustFiltersForMobile();
                 }, (err) => console.error(err));
                 
+                // Listen to Transactions
                 onSnapshot(collection(db, ...TRANS_PATH), (s) => {
                     transactions = s.docs.map(d => ({ id: d.id, ...d.data() }));
                     transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                     renderTransactions();
                     calculateFinancials();
                 }, (err) => console.error(err));
+
+                // Listen to Gem Info
+                onSnapshot(doc(db, ...GEMINFO_PATH, 'registry'), async (s) => {
+                    if (s.exists()) {
+                        gemInfo = s.data();
+                    } else {
+                        // Init defaults if empty
+                        await setDoc(doc(db, ...GEMINFO_PATH, 'registry'), defaultGemInfo);
+                        gemInfo = defaultGemInfo;
+                    }
+                    renderGemInfoAccordions();
+                });
             } else {
                 signInAnonymously(auth);
             }
@@ -638,11 +655,8 @@
             document.getElementById('view-financials').classList.toggle('hidden', tab !== 'financials');
             document.getElementById('view-admin').classList.toggle('hidden', tab !== 'admin');
             
-            // Toggle visibility of floating filter button based on tab
             const mobileFilterTrigger = document.getElementById('mobile-filter-trigger');
-            if (mobileFilterTrigger) {
-                mobileFilterTrigger.style.display = (tab === 'list') ? 'block' : 'none';
-            }
+            if (mobileFilterTrigger) mobileFilterTrigger.style.display = (tab === 'list') ? 'block' : 'none';
 
             ['list', 'transactions', 'financials', 'admin'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
@@ -651,7 +665,6 @@
             if (tab === 'financials') calculateFinancials();
         };
 
-        // Mobile Filter Toggle
         window.toggleMobileFilter = () => {
             const overlay = document.getElementById('mobile-filter-overlay');
             overlay.classList.toggle('active');
@@ -662,13 +675,10 @@
             const isMobile = window.innerWidth < 640;
             const container = document.getElementById('filter-controls-container');
             const mobileSlots = document.getElementById('mobile-filter-slots');
-            
             if (isMobile && mobileSlots.children.length === 0) {
-                // Move selectors to mobile slot
                 const selectors = Array.from(container.children);
                 selectors.forEach(s => mobileSlots.appendChild(s));
             } else if (!isMobile && container.children.length === 0) {
-                // Move selectors back to desktop grid
                 const selectors = Array.from(mobileSlots.children);
                 selectors.forEach(s => container.appendChild(s));
             }
@@ -678,19 +688,80 @@
         window.switchAdminSubTab = (sub) => {
             document.getElementById('admin-panel-inventory').classList.toggle('hidden', sub !== 'inventory');
             document.getElementById('admin-panel-transactions').classList.toggle('hidden', sub !== 'transactions');
+            document.getElementById('admin-panel-geminfo').classList.toggle('hidden', sub !== 'geminfo');
             document.getElementById('admin-panel-extract').classList.toggle('hidden', sub !== 'extract');
             
             const btnInv = document.getElementById('admin-subtab-inventory');
             const btnTrans = document.getElementById('admin-subtab-transactions');
+            const btnGem = document.getElementById('admin-subtab-geminfo');
             const btnExt = document.getElementById('admin-subtab-extract');
 
-            [btnInv, btnTrans, btnExt].forEach(b => {
+            [btnInv, btnTrans, btnGem, btnExt].forEach(b => {
                 b.className = "w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all";
             });
 
-            const activeBtn = sub === 'inventory' ? btnInv : sub === 'transactions' ? btnTrans : btnExt;
+            const activeBtn = sub === 'inventory' ? btnInv : sub === 'transactions' ? btnTrans : sub === 'geminfo' ? btnGem : btnExt;
             const activeColor = sub === 'transactions' ? 'text-green-700 bg-green-50 border-green-200' : 'text-[#D4AF37] bg-gold-light border-gold-border';
             activeBtn.className = `w-full text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest border ${activeColor}`;
+        };
+
+        // Gem Info Management
+        window.renderGemInfoAccordions = () => {
+            const container = document.getElementById('gem-info-accordions');
+            if (!container) return;
+            container.innerHTML = '';
+
+            Object.keys(gemInfo).forEach(category => {
+                const items = gemInfo[category] || [];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "accordion-item border border-gold-border rounded-xl overflow-hidden bg-white shadow-sm";
+                itemDiv.innerHTML = `
+                    <button class="w-full px-6 py-4 flex justify-between items-center bg-[#F9F6EE] hover:bg-gold-light/50 transition-colors" onclick="toggleAccordion(this)">
+                        <span class="text-sm font-bold text-gray-800 uppercase tracking-widest">${category}</span>
+                        <svg class="accordion-icon w-4 h-4 text-[#D4AF37] transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="p-6 space-y-4">
+                            <div class="flex gap-2">
+                                <input type="text" placeholder="Add new ${category.toLowerCase()}..." class="flex-1 px-4 py-2 border border-gold-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-[#D4AF37]">
+                                <button onclick="addGemInfoValue('${category}', this.previousElementSibling)" class="px-4 py-2 bg-[#D4AF37] text-white rounded-lg text-xs font-bold uppercase">Add</button>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                ${items.map(val => `
+                                    <div class="flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg group">
+                                        <span class="text-[11px] font-medium text-gray-700 truncate">${val}</span>
+                                        <button onclick="removeGemInfoValue('${category}', '${val}')" class="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+        };
+
+        window.toggleAccordion = (btn) => {
+            const item = btn.parentElement;
+            item.classList.toggle('active');
+        };
+
+        window.addGemInfoValue = async (category, input) => {
+            const val = input.value.trim();
+            if (!val) return;
+            if (gemInfo[category].includes(val)) return;
+            gemInfo[category].push(val);
+            gemInfo[category].sort();
+            await updateDoc(doc(db, ...GEMINFO_PATH, 'registry'), gemInfo);
+            input.value = '';
+        };
+
+        window.removeGemInfoValue = async (category, val) => {
+            if (!confirm(`Remove "${val}" from ${category}?`)) return;
+            gemInfo[category] = gemInfo[category].filter(v => v !== val);
+            await updateDoc(doc(db, ...GEMINFO_PATH, 'registry'), gemInfo);
         };
 
         const formatDate = (dateStr) => {
@@ -709,21 +780,17 @@
             return `${d}/${m}/${y} ${time}`;
         };
 
-        // Reset functions for search/filters
         window.resetStockPage = () => { stockCurrentPage = 1; };
         window.resetTransPage = () => { transCurrentPage = 1; };
 
-        // Helper to render pagination UI
         const renderPaginationControls = (elementId, totalItems, currentPage, onPageChange) => {
             const container = document.getElementById(elementId);
             if (!container) return;
-
             const totalPages = Math.ceil(totalItems / PAGE_SIZE);
             if (totalPages <= 1) {
                 container.innerHTML = `<span class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">${totalItems} Items Total</span>`;
                 return;
             }
-
             container.innerHTML = `
                 <div class="flex items-center gap-2">
                     <button onclick="${onPageChange}(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="p-2 border border-gold-border rounded-lg bg-white disabled:opacity-30 disabled:cursor-not-allowed">
@@ -738,24 +805,13 @@
             `;
         };
 
-        window.setStockPage = (page) => {
-            stockCurrentPage = page;
-            renderStock();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        window.setTransPage = (page) => {
-            transCurrentPage = page;
-            renderTransactions();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
+        window.setStockPage = (page) => { stockCurrentPage = page; renderStock(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+        window.setTransPage = (page) => { transCurrentPage = page; renderTransactions(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
         window.renderStock = () => {
             const container = document.getElementById('stock-container');
             const searchInput = document.getElementById('search-input');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
-            
-            // Support finding selects in either desktop or mobile containers
             const getVal = (id) => document.getElementById(id)?.value || "";
             const typeFilter = getVal('filter-type');
             const weightFilter = getVal('filter-weight');
@@ -787,7 +843,6 @@
             const totalItems = filtered.length;
             const startIndex = (stockCurrentPage - 1) * PAGE_SIZE;
             const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
-
             document.getElementById('empty-state').classList.toggle('hidden', filtered.length > 0);
             container.innerHTML = '';
 
@@ -796,43 +851,13 @@
                 row.className = "group hover:bg-[#FDF7E2] transition-colors data-row cursor-pointer relative";
                 row.onclick = (e) => { if (e.target.closest('button')) return; openModal('edit', item.id); };
                 row.innerHTML = `
-                    <td class="px-8 py-6 data-cell">
-                        <span class="mobile-label">Identity</span>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-900 text-lg sm:text-base">${item.lotName || 'Unnamed'}</span>
-                            <span class="text-[9px] font-bold text-[#B8860B] bg-[#FDF7E2] px-2 py-0.5 rounded uppercase tracking-widest border border-gold-border">${item.type || 'Standard'}</span>
-                        </div>
-                    </td>
-                    <td class="px-8 py-6 data-cell">
-                        <span class="mobile-label">Gem Details</span>
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span>
-                            <span class="text-xs text-gray-500 font-serif italic">${item.color || 'Standard Grade'}</span>
-                        </div>
-                    </td>
-                    <td class="px-8 py-6 data-cell">
-                        <span class="mobile-label">Purchased</span>
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="font-bold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span>
-                            <span class="text-[10px] text-gray-400 font-mono">${formatDate(item.purchaseDate)}</span>
-                        </div>
-                    </td>
-                    <td class="px-8 py-6 data-cell sm:text-center">
-                        <div class="stock-badge-mobile inline-flex flex-col sm:items-center">
-                            <span class="text-2xl font-black text-gray-900">${item.quantity}</span>
-                        </div>
-                    </td>
-                    <td class="px-8 py-6 data-cell text-right">
-                        <div class="flex sm:justify-end gap-3 flex-1">
-                            <button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 bg-green-600 text-white text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-green-700 transition-all shadow-sm">Sale</button>
-                            <button onclick="openModal('edit', '${item.id}')" class="p-2.5 bg-white border border-gold-border text-[#D4AF37] rounded-lg sm:block hidden hover:bg-gold-light">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            </button>
-                        </div>
-                    </td>`;
+                    <td class="px-8 py-6 data-cell"><span class="mobile-label">Identity</span><div class="flex items-center gap-2"><span class="font-bold text-gray-900 text-lg sm:text-base">${item.lotName || 'Unnamed'}</span><span class="text-[9px] font-bold text-[#B8860B] bg-[#FDF7E2] px-2 py-0.5 rounded uppercase tracking-widest border border-gold-border">${item.type || 'Standard'}</span></div></td>
+                    <td class="px-8 py-6 data-cell"><span class="mobile-label">Gem Details</span><div class="flex items-center gap-2 text-sm"><span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span><span class="text-xs text-gray-500 font-serif italic">${item.color || 'Standard Grade'}</span></div></td>
+                    <td class="px-8 py-6 data-cell"><span class="mobile-label">Purchased</span><div class="flex items-center gap-2 text-sm"><span class="font-bold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span><span class="text-[10px] text-gray-400 font-mono">${formatDate(item.purchaseDate)}</span></div></td>
+                    <td class="px-8 py-6 data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-center"><span class="text-2xl font-black text-gray-900">${item.quantity}</span></div></td>
+                    <td class="px-8 py-6 data-cell text-right"><div class="flex sm:justify-end gap-3 flex-1"><button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 bg-green-600 text-white text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-green-700 transition-all shadow-sm">Sale</button></div></td>`;
                 container.appendChild(row);
             });
-
             renderPaginationControls('stock-pagination', totalItems, stockCurrentPage, 'setStockPage');
         };
 
@@ -841,13 +866,10 @@
             const qualities = [...new Set(stock.map(i => i.color).filter(Boolean))];
             const filterType = document.getElementById('filter-type');
             const filterQuality = document.getElementById('filter-quality');
-            const currentT = filterType.value;
-            const currentQ = filterQuality.value;
-
-            if (filterType) filterType.innerHTML = '<option value="">All Variety</option>' + types.map(t => `<option value="${t}" ${t===currentT?'selected':''}>${t}</option>`).join('');
-            if (filterQuality) filterQuality.innerHTML = '<option value="">All Grades</option>' + qualities.map(q => `<option value="${q}" ${q===currentQ?'selected':''}>${q}</option>`).join('');
+            if (filterType) filterType.innerHTML = '<option value="">All Variety</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+            if (filterQuality) filterQuality.innerHTML = '<option value="">All Grades</option>' + qualities.map(q => `<option value="${q}">${q}</option>`).join('');
             const typeSug = document.getElementById('type-suggestions');
-            if (typeSug) typeSug.innerHTML = types.map(t => `<option value="${t}">`).join('');
+            if (typeSug) typeSug.innerHTML = (gemInfo["Gemstone"] || types).map(t => `<option value="${t}">`).join('');
         };
 
         window.openModal = (mode, id = null) => {
@@ -927,29 +949,18 @@
             const shareInput = document.getElementById('sell-share').value || '100%';
             const item = stock.find(i => i.id === sellTargetId);
             if (!item || qty <= 0 || qty > item.quantity || isNaN(price)) return;
-
             const stockDoc = doc(db, ...STOCK_PATH, sellTargetId);
             const shareCost = (item.buyingPrice / item.quantity) * qty;
-            
             if (item.quantity === qty) await deleteDoc(stockDoc);
             else await updateDoc(stockDoc, { quantity: item.quantity - qty });
-            
             logTransaction('SELL', item, qty, currency, price, null, shareInput, shareCost);
             closeSellModal();
         };
 
         async function logTransaction(action, item, qty, currency, price, manualTimestamp = null, shareVal = '100%', originalCost = 0) {
             const data = {
-                action, 
-                lotName: item.lotName, 
-                type: item.type, 
-                weight: item.weight || '0',
-                color: item.color || '',
-                quantity: qty,
-                price: parseFloat(price),
-                currency: currency,
-                share: shareVal,
-                originalCost: originalCost,
+                action, lotName: item.lotName, type: item.type, weight: item.weight || '0', color: item.color || '',
+                quantity: qty, price: parseFloat(price), currency: currency, share: shareVal, originalCost: originalCost,
                 totalValue: `${currency} ${Number(price).toLocaleString()}`,
                 timestamp: manualTimestamp ? Timestamp.fromDate(new Date(manualTimestamp)) : serverTimestamp()
             };
@@ -961,10 +972,8 @@
             const search = document.getElementById('trans-search').value.toLowerCase();
             const actionFilter = document.getElementById('trans-filter-action').value;
             const dateFilter = document.getElementById('trans-filter-date').value;
-            
             if (!tbody) return;
             tbody.innerHTML = '';
-            
             let filtered = transactions.filter(t => {
                 const matchesSearch = (t.lotName || "").toLowerCase().includes(search);
                 const matchesAction = actionFilter === "" || t.action === actionFilter;
@@ -986,59 +995,23 @@
                     } else if (dateFilter === '3months') {
                         const past = new Date(today); past.setMonth(past.getMonth() - 3);
                         matchesDate = tDate >= past;
-                    } else if (dateFilter === '6months') {
-                        const past = new Date(today); past.setMonth(past.getMonth() - 6);
-                        matchesDate = tDate >= past;
-                    } else if (dateFilter === '12months') {
-                        const past = new Date(today); past.setMonth(past.getMonth() - 12);
-                        matchesDate = tDate >= past;
                     }
                 }
                 return matchesSearch && matchesAction && matchesDate;
             });
-
-            // Default sort: Newest First
             filtered.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-
             const totalItems = filtered.length;
             const startIndex = (transCurrentPage - 1) * PAGE_SIZE;
             const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
-            
-            paginated.forEach(t => appendTransRow(tbody, t));
-
+            paginated.forEach(t => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gold-light/20 transition-colors text-[11px] data-row relative";
+                const actionClass = t.action === 'BUY' ? 'text-blue-700 bg-blue-50 border-blue-100' : 'text-green-700 bg-green-50 border-green-100';
+                row.innerHTML = `<td class="px-8 py-5 text-gray-400 font-mono data-cell"><span class="mobile-label">Date</span>${formatDateTime(t.timestamp)}</td><td class="px-8 py-5 text-center data-cell"><span class="mobile-label">Action</span><span class="px-2.5 py-1 rounded-full font-bold border ${actionClass}">${t.action}</span></td><td class="px-8 py-5 data-cell"><span class="mobile-label">Lot</span><div class="flex items-center gap-2"><span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span><span class="text-[9px] text-gray-400 uppercase">${t.type || 'Standard'} • ${t.weight || '0'} CT</span></div></td><td class="px-8 py-5 text-center font-black text-gray-600 data-cell"><span class="mobile-label">Qty</span>${t.quantity || 0}</td><td class="px-8 py-5 font-bold text-gray-900 data-cell"><span class="mobile-label">Value</span>${t.totalValue || 'N/A'}</td>`;
+                tbody.appendChild(row);
+            });
             renderPaginationControls('trans-pagination', totalItems, transCurrentPage, 'setTransPage');
         };
-
-        function appendTransRow(parent, t) {
-            const row = document.createElement('tr');
-            row.className = "hover:bg-gold-light/20 transition-colors text-[11px] data-row relative";
-            const actionClass = t.action === 'BUY' ? 'text-blue-700 bg-blue-50 border-blue-100' : 'text-green-700 bg-green-50 border-green-100';
-            row.innerHTML = `
-                <td class="px-8 py-5 text-gray-400 font-mono data-cell">
-                    <span class="mobile-label">Date & Time</span>
-                    ${formatDateTime(t.timestamp)}
-                </td>
-                <td class="px-8 py-5 text-center data-cell">
-                    <span class="mobile-label">Action</span>
-                    <span class="px-2.5 py-1 rounded-full font-bold border ${actionClass}">${t.action}</span>
-                </td>
-                <td class="px-8 py-5 data-cell">
-                    <span class="mobile-label">Lot Name</span>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span>
-                        <span class="text-[9px] text-gray-400 uppercase tracking-tighter">${t.type || 'Standard'} • ${t.weight || '0'} CT • Share: ${t.share || '100%'}</span>
-                    </div>
-                </td>
-                <td class="px-8 py-5 text-center font-black text-gray-600 data-cell">
-                    <span class="mobile-label">Qty</span>
-                    ${t.quantity || 0}
-                </td>
-                <td class="px-8 py-5 font-bold text-gray-900 data-cell">
-                    <span class="mobile-label">Value</span>
-                    ${t.totalValue || 'N/A'}
-                </td>`;
-            parent.appendChild(row);
-        }
 
         function parseShare(shareStr) {
             if (!shareStr) return 1.0;
@@ -1048,228 +1021,55 @@
         }
 
         window.calculateFinancials = () => {
-            let shareSales = 0;
-            let shareCost = 0;
-            let currentAssetValue = 0;
-
+            let shareSales = 0, shareCost = 0, currentAssetValue = 0;
             transactions.forEach(t => {
                 if (t.action === 'SELL') {
                     const originalItem = stock.find(s => s.lotName === t.lotName);
                     const unitPurchasePrice = t.originalCost ? (t.originalCost / t.quantity) : (originalItem ? (originalItem.buyingPrice / originalItem.quantity) : 0);
-                    const actualCost = unitPurchasePrice * (t.quantity || 0);
                     const sharePerc = parseShare(t.share);
                     shareSales += (t.price || 0) * sharePerc;
-                    shareCost += actualCost * sharePerc;
+                    shareCost += (unitPurchasePrice * (t.quantity || 0)) * sharePerc;
                 }
             });
-
-            const now = new Date();
-            let ageNew = 0;
-            let ageMid = 0;
-            let ageOld = 0;
-
-            stock.forEach(s => {
-                const val = parseFloat(s.buyingPrice || 0);
-                currentAssetValue += val;
-                const pDate = new Date(s.purchaseDate);
-                const diffMonths = (now.getFullYear() - pDate.getFullYear()) * 12 + (now.getMonth() - pDate.getMonth());
-                if (diffMonths <= 6) ageNew += val;
-                else if (diffMonths <= 12) ageMid += val;
-                else ageOld += val;
-            });
-
+            stock.forEach(s => { currentAssetValue += parseFloat(s.buyingPrice || 0); });
             document.getElementById('fin-total-sales').innerText = `THB ${shareSales.toLocaleString()}`;
             document.getElementById('fin-total-cost').innerText = `THB ${shareCost.toLocaleString()}`;
             document.getElementById('fin-asset-value').innerText = `THB ${currentAssetValue.toLocaleString()}`;
-
             const profit = shareSales - shareCost;
             const profitEl = document.getElementById('fin-net-profit');
-            const profitCard = document.getElementById('fin-profit-card');
             if (profitEl) {
                 profitEl.innerText = `THB ${profit.toLocaleString()}`;
                 profitEl.className = `text-2xl font-black ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`;
-            }
-            if (profitCard) profitCard.style.borderLeftColor = profit >= 0 ? '#10b981' : '#ef4444';
-
-            const turnoverContainer = document.getElementById('turnover-container');
-            if (turnoverContainer) {
-                const varieties = [...new Set([...stock.map(s => s.type), ...transactions.map(t => t.type)])].filter(Boolean);
-                const metrics = varieties.map(v => {
-                    const sold = transactions.filter(t => t.action === 'SELL' && t.type === v).reduce((acc, t) => acc + (t.quantity || 0), 0);
-                    const current = stock.filter(s => s.type === v).reduce((acc, s) => acc + (s.quantity || 0), 0);
-                    return { variety: v, sold, current };
-                }).sort((a, b) => b.sold - a.sold);
-
-                turnoverContainer.innerHTML = metrics.map(m => `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                            <span class="text-xs font-bold text-gray-800 uppercase tracking-widest">${m.variety}</span>
-                            <p class="text-[9px] text-gray-400 mt-1 uppercase">Sold: ${m.sold} / In Stock: ${m.current}</p>
-                        </div>
-                        <span class="px-3 py-1 bg-white border border-gold-border rounded-lg text-[10px] font-bold text-[#D4AF37]">
-                            ${m.sold > 0 ? ((m.sold / (m.sold + m.current)) * 100).toFixed(0) + '%' : '0%'} MVMT
-                        </span>
-                    </div>
-                `).join('');
-            }
-
-            const maxAge = Math.max(ageNew, ageMid, ageOld, 1);
-            if (document.getElementById('age-new-val')) {
-                document.getElementById('age-new-val').innerText = `THB ${ageNew.toLocaleString()}`;
-                document.getElementById('age-mid-val').innerText = `THB ${ageMid.toLocaleString()}`;
-                document.getElementById('age-old-val').innerText = `THB ${ageOld.toLocaleString()}`;
-                document.getElementById('age-new-bar').style.width = `${(ageNew / maxAge) * 100}%`;
-                document.getElementById('age-mid-bar').style.width = `${(ageMid / maxAge) * 100}%`;
-                document.getElementById('age-old-bar').style.width = `${(ageOld / maxAge) * 100}%`;
             }
         };
 
         window.extractTransactions = () => {
             if (transactions.length === 0) return;
-            const exportData = transactions.map(t => ({
-                'Date': formatDateTime(t.timestamp),
-                'Action': t.action,
-                'Lot Name': t.lotName,
-                'Variety': t.type,
-                'Quantity': t.quantity,
-                'Weight (CT)': t.weight,
-                'Color/Grade': t.color,
-                'Currency': t.currency,
-                'Price': t.price,
-                'Share': t.share,
-                'Realized Cost (Base)': t.originalCost || 0
-            }));
-            const ws = XLSX.utils.json_to_sheet(exportData);
+            const ws = XLSX.utils.json_to_sheet(transactions.map(t => ({ 'Date': formatDateTime(t.timestamp), 'Action': t.action, 'Lot Name': t.lotName, 'Price': t.price })));
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-            XLSX.writeFile(wb, `Nawarat_Transactions_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(wb, "Nawarat_Transactions.xlsx");
         };
 
         window.extractStock = () => {
             if (stock.length === 0) return;
-            const exportData = stock.map(s => ({
-                'Lot Name': s.lotName,
-                'Variety': s.type,
-                'Quantity': s.quantity,
-                'Weight (CT)': s.weight,
-                'Color/Grade': s.color,
-                'Buying Currency': s.buyingCurrency,
-                'Buying Price (Total)': s.buyingPrice,
-                'Purchase Date': s.purchaseDate,
-                'Share': s.share,
-                'Notes': s.notes || ''
-            }));
-            const ws = XLSX.utils.json_to_sheet(exportData);
+            const ws = XLSX.utils.json_to_sheet(stock);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Inventory");
-            XLSX.writeFile(wb, `Nawarat_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Stock");
+            XLSX.writeFile(wb, "Nawarat_Stock.xlsx");
         };
 
         document.getElementById('import-excel').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const status = document.getElementById('import-status');
-            const progress = document.getElementById('import-progress');
-            const message = document.getElementById('import-message');
-            status.classList.remove('hidden');
             const reader = new FileReader();
             reader.onload = async (evt) => {
                 const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
                 const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                const today = new Date().toISOString().split('T')[0];
-                let updateCount = 0;
-                let addCount = 0;
-
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    const lotNameVal = String(row.lotName || 'Imported Lot');
-                    const existingItem = stock.find(s => s.lotName === lotNameVal);
-
-                    let pDate = row.purchaseDate ? (row.purchaseDate instanceof Date ? row.purchaseDate.toISOString().split('T')[0] : String(row.purchaseDate)) : today;
-                    
-                    const payload = {
-                        lotName: lotNameVal,
-                        type: String(row.type || 'Standard'),
-                        quantity: parseInt(row.quantity || 0),
-                        weight: String(row.weight || '0'),
-                        color: String(row.color || 'Standard Grade'),
-                        buyingCurrency: String(row.buyingCurrency || 'THB'),
-                        buyingPrice: parseFloat(row.buyingPrice || 0),
-                        purchaseDate: pDate,
-                        share: String(row.share || '100%'),
-                        notes: String(row.notes || ''),
-                        updatedAt: serverTimestamp()
-                    };
-
-                    if (existingItem) {
-                        await updateDoc(doc(db, ...STOCK_PATH, existingItem.id), payload);
-                        updateCount++;
-                    } else {
-                        await addDoc(collection(db, ...STOCK_PATH), payload);
-                        addCount++;
-                    }
-                    
-                    progress.style.width = `${Math.round(((i + 1) / data.length) * 100)}%`;
-                    message.innerText = `Processing: ${i + 1} / ${data.length}`;
+                for (const row of data) {
+                    await addDoc(collection(db, ...STOCK_PATH), { ...row, updatedAt: serverTimestamp() });
                 }
-                message.innerText = `Finished: ${addCount} Added, ${updateCount} Updated.`;
-            };
-            reader.readAsBinaryString(file);
-        });
-
-        document.getElementById('import-trans-excel').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const status = document.getElementById('import-trans-status');
-            const progress = document.getElementById('import-trans-progress');
-            const message = document.getElementById('import-trans-message');
-            status.classList.remove('hidden');
-            const reader = new FileReader();
-            reader.onload = async (evt) => {
-                const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
-                const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                let updateCount = 0;
-                let addCount = 0;
-
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    const action = (row.action || "SELL").toUpperCase();
-                    const lotNameVal = String(row.lotName || 'Unnamed Lot');
-                    const sDate = row.saleDate ? (row.saleDate instanceof Date ? row.saleDate : new Date(row.saleDate)) : new Date();
-                    
-                    const existingTrans = transactions.find(t => 
-                        t.lotName === lotNameVal && 
-                        t.action === action &&
-                        formatDate(t.timestamp?.toDate()?.toISOString()?.split('T')[0]) === formatDate(sDate.toISOString().split('T')[0])
-                    );
-
-                    const payload = {
-                        action, 
-                        lotName: lotNameVal, 
-                        type: String(row.type || 'Standard'), 
-                        weight: String(row.weight || '0'),
-                        color: String(row.color || ''),
-                        quantity: parseInt(row.quantity || 1),
-                        price: parseFloat(row.salePrice || 0),
-                        currency: String(row.currency || 'THB'),
-                        share: String(row.share || '100%'),
-                        originalCost: parseFloat(row.originalCost || 0),
-                        totalValue: `${row.currency || 'THB'} ${Number(row.salePrice || 0).toLocaleString()}`,
-                        timestamp: Timestamp.fromDate(sDate)
-                    };
-
-                    if (existingTrans) {
-                        await updateDoc(doc(db, ...TRANS_PATH, existingTrans.id), payload);
-                        updateCount++;
-                    } else {
-                        await addDoc(collection(db, ...TRANS_PATH), payload);
-                        addCount++;
-                    }
-
-                    progress.style.width = `${Math.round(((i + 1) / data.length) * 100)}%`;
-                    message.innerText = `Processing: ${i + 1} / ${data.length}`;
-                }
-                message.innerText = `Finished: ${addCount} Recorded, ${updateCount} Updated.`;
+                alert('Import Complete');
             };
             reader.readAsBinaryString(file);
         });
