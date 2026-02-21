@@ -483,7 +483,7 @@
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Gemstone Variety</label>
-                        <input type="text" id="type" list="type-suggestions" required class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
+                        <input type="text" id="type" list="type-suggestions" required placeholder="Select variety..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
                         <datalist id="type-suggestions"></datalist>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
@@ -498,7 +498,8 @@
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Color / Clarity Grade</label>
-                        <input type="text" id="color" class="w-full px-4 py-3 border border-gold-border rounded-xl">
+                        <input type="text" id="color" list="color-suggestions" placeholder="Select color grade..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
+                        <datalist id="color-suggestions"></datalist>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
@@ -589,7 +590,7 @@
 
         let stock = [];
         let transactions = [];
-        let gemInfo = {}; // Stores the reference lists
+        let gemInfo = {}; 
         let sellTargetId = null;
 
         const PAGE_SIZE = 15;
@@ -600,7 +601,6 @@
         const TRANS_PATH = ['artifacts', appId, 'public', 'data', 'transactions'];
         const GEMINFO_PATH = ['artifacts', appId, 'public', 'data', 'gem_info'];
 
-        // Initial default data if none exists in Firestore
         const defaultGemInfo = {
             "Gemstone": ["Alexandrite", "Amber", "Amethyst", "Ametrine", "Aquamarine", "Citrine", "Diamond", "Diamond Synthetic (CVD)", "Diamond Synthetic (HPHT)", "Demantoid", "Emerald", "Emerald No Oil", "Emerald Insignificant", "Emerald Minor", "Emerald Filled", "Fancy Color Diamond", "Garnet", "Jade", "Moonstone", "Morganite", "Opal", "Opal Fire", "Opal Treated", "Paraiba", "Pearl", "Pearl Treated", "Peridot", "Rose Quartz", "Ruby", "Ruby Heat", "Ruby Star", "Sapphire", "Sapphire Color Change", "Sapphire Heat", "Sapphire Star", "Spinel", "Sphene", "Tanzanite", "Topaz", "Tourmaline", "Tourmaline Lagoon", "Turquoise", "Zircon"],
             "Classification": ["Loose Stone", "Lot", "Rough", "Rough Lot", "Ring", "Necklace", "Ear Rings", "Pendant"],
@@ -614,7 +614,6 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Listen to Stock
                 onSnapshot(collection(db, ...STOCK_PATH), (s) => {
                     stock = s.docs.map(d => ({ id: d.id, ...d.data() }));
                     renderStock();
@@ -624,7 +623,6 @@
                     adjustFiltersForMobile();
                 }, (err) => console.error(err));
                 
-                // Listen to Transactions
                 onSnapshot(collection(db, ...TRANS_PATH), (s) => {
                     transactions = s.docs.map(d => ({ id: d.id, ...d.data() }));
                     transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
@@ -632,23 +630,21 @@
                     calculateFinancials();
                 }, (err) => console.error(err));
 
-                // Listen to Gem Info
                 onSnapshot(doc(db, ...GEMINFO_PATH, 'registry'), async (s) => {
                     if (s.exists()) {
                         gemInfo = s.data();
                     } else {
-                        // Init defaults if empty
                         await setDoc(doc(db, ...GEMINFO_PATH, 'registry'), defaultGemInfo);
                         gemInfo = defaultGemInfo;
                     }
                     renderGemInfoAccordions();
+                    updateFilters(); 
                 });
             } else {
                 signInAnonymously(auth);
             }
         });
 
-        // Tab Management
         window.switchTab = (tab) => {
             document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
             document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
@@ -675,10 +671,10 @@
             const isMobile = window.innerWidth < 640;
             const container = document.getElementById('filter-controls-container');
             const mobileSlots = document.getElementById('mobile-filter-slots');
-            if (isMobile && mobileSlots.children.length === 0) {
+            if (isMobile && mobileSlots && mobileSlots.children.length === 0) {
                 const selectors = Array.from(container.children);
                 selectors.forEach(s => mobileSlots.appendChild(s));
-            } else if (!isMobile && container.children.length === 0) {
+            } else if (!isMobile && container && container.children.length === 0) {
                 const selectors = Array.from(mobileSlots.children);
                 selectors.forEach(s => container.appendChild(s));
             }
@@ -705,7 +701,6 @@
             activeBtn.className = `w-full text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest border ${activeColor}`;
         };
 
-        // Gem Info Management
         window.renderGemInfoAccordions = () => {
             const container = document.getElementById('gem-info-accordions');
             if (!container) return;
@@ -843,7 +838,7 @@
             const totalItems = filtered.length;
             const startIndex = (stockCurrentPage - 1) * PAGE_SIZE;
             const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
-            document.getElementById('empty-state').classList.toggle('hidden', filtered.length > 0);
+            if (document.getElementById('empty-state')) document.getElementById('empty-state').classList.toggle('hidden', filtered.length > 0);
             container.innerHTML = '';
 
             paginated.forEach(item => {
@@ -863,13 +858,25 @@
 
         window.updateFilters = () => {
             const types = [...new Set(stock.map(i => i.type).filter(Boolean))];
-            const qualities = [...new Set(stock.map(i => i.color).filter(Boolean))];
+            const colorsInStock = [...new Set(stock.map(i => i.color).filter(Boolean))];
             const filterType = document.getElementById('filter-type');
             const filterQuality = document.getElementById('filter-quality');
+            
             if (filterType) filterType.innerHTML = '<option value="">All Variety</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
-            if (filterQuality) filterQuality.innerHTML = '<option value="">All Grades</option>' + qualities.map(q => `<option value="${q}">${q}</option>`).join('');
+            if (filterQuality) filterQuality.innerHTML = '<option value="">All Grades</option>' + colorsInStock.map(q => `<option value="${q}">${q}</option>`).join('');
+            
+            // Registration Modal Datalists
             const typeSug = document.getElementById('type-suggestions');
-            if (typeSug) typeSug.innerHTML = (gemInfo["Gemstone"] || types).map(t => `<option value="${t}">`).join('');
+            if (typeSug) {
+                const gemstoneList = (gemInfo && gemInfo["Gemstone"]) ? gemInfo["Gemstone"] : types;
+                typeSug.innerHTML = gemstoneList.map(t => `<option value="${t}">`).join('');
+            }
+
+            const colorSug = document.getElementById('color-suggestions');
+            if (colorSug) {
+                const colorList = (gemInfo && gemInfo["Color"]) ? gemInfo["Color"] : colorsInStock;
+                colorSug.innerHTML = colorList.map(c => `<option value="${c}">`).join('');
+            }
         };
 
         window.openModal = (mode, id = null) => {
@@ -903,7 +910,7 @@
             const id = document.getElementById('edit-id').value;
             const data = {
                 lotName: document.getElementById('lotName').value,
-                type: document.getElementById('type').value,
+                type: document.getElementById('type').value, 
                 quantity: parseInt(document.getElementById('quantity').value),
                 weight: document.getElementById('weight').value,
                 color: document.getElementById('color').value,
@@ -969,7 +976,8 @@
 
         window.renderTransactions = () => {
             const tbody = document.getElementById('transaction-body');
-            const search = document.getElementById('trans-search').value.toLowerCase();
+            const searchInput = document.getElementById('trans-search');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
             const actionFilter = document.getElementById('trans-filter-action').value;
             const dateFilter = document.getElementById('trans-filter-date').value;
             if (!tbody) return;
@@ -1032,9 +1040,9 @@
                 }
             });
             stock.forEach(s => { currentAssetValue += parseFloat(s.buyingPrice || 0); });
-            document.getElementById('fin-total-sales').innerText = `THB ${shareSales.toLocaleString()}`;
-            document.getElementById('fin-total-cost').innerText = `THB ${shareCost.toLocaleString()}`;
-            document.getElementById('fin-asset-value').innerText = `THB ${currentAssetValue.toLocaleString()}`;
+            if (document.getElementById('fin-total-sales')) document.getElementById('fin-total-sales').innerText = `THB ${shareSales.toLocaleString()}`;
+            if (document.getElementById('fin-total-cost')) document.getElementById('fin-total-cost').innerText = `THB ${shareCost.toLocaleString()}`;
+            if (document.getElementById('fin-asset-value')) document.getElementById('fin-asset-value').innerText = `THB ${currentAssetValue.toLocaleString()}`;
             const profit = shareSales - shareCost;
             const profitEl = document.getElementById('fin-net-profit');
             if (profitEl) {
@@ -1059,20 +1067,23 @@
             XLSX.writeFile(wb, "Nawarat_Stock.xlsx");
         };
 
-        document.getElementById('import-excel').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (evt) => {
-                const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
-                const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                for (const row of data) {
-                    await addDoc(collection(db, ...STOCK_PATH), { ...row, updatedAt: serverTimestamp() });
-                }
-                alert('Import Complete');
-            };
-            reader.readAsBinaryString(file);
-        });
+        const importInput = document.getElementById('import-excel');
+        if (importInput) {
+            importInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
+                    const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                    for (const row of data) {
+                        await addDoc(collection(db, ...STOCK_PATH), { ...row, updatedAt: serverTimestamp() });
+                    }
+                    alert('Import Complete');
+                };
+                reader.readAsBinaryString(file);
+            });
+        }
     </script>
 </body>
 </html>
