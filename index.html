@@ -501,7 +501,7 @@
                         <input type="text" id="status" list="status-suggestions" placeholder="Select status..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
                         <datalist id="status-suggestions"></datalist>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-2">
                         <div class="space-y-1.5">
                             <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Quantity</label>
                             <input type="number" id="quantity" required min="1" class="w-full px-4 py-3 border border-gold-border rounded-xl">
@@ -541,7 +541,7 @@
                         <input type="text" id="classification" list="class-suggestions" placeholder="Select classification..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
                         <datalist id="class-suggestions"></datalist>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-2">
                         <div class="space-y-1.5">
                             <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Currency</label>
                             <select id="buyingCurrency" class="w-full px-4 py-3 border border-gold-border rounded-xl bg-white">
@@ -549,17 +549,19 @@
                             </select>
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Total Purchase Price</label>
+                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Purchase Price</label>
                             <input type="number" step="0.01" id="buyingPrice" required class="w-full px-4 py-3 border border-gold-border rounded-xl">
                         </div>
                     </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Purchase Date</label>
-                        <input type="date" id="purchaseDate" required class="w-full px-4 py-3 border border-gold-border rounded-xl">
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Share</label>
-                        <input type="text" id="share" placeholder="e.g. 100% or Partner Name" class="w-full px-4 py-3 border border-gold-border rounded-xl">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Purchase Date</label>
+                            <input type="date" id="purchaseDate" required class="w-full px-4 py-3 border border-gold-border rounded-xl">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Share</label>
+                            <input type="text" id="share" placeholder="e.g. 100% or Partner Name" class="w-full px-4 py-3 border border-gold-border rounded-xl">
+                        </div>
                     </div>
                     <div class="md:col-span-2 space-y-1.5">
                         <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Item Specifications</label>
