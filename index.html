@@ -486,6 +486,11 @@
                         <input type="text" id="type" list="type-suggestions" required placeholder="Select variety..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
                         <datalist id="type-suggestions"></datalist>
                     </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Status</label>
+                        <input type="text" id="status" list="status-suggestions" placeholder="Select status..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
+                        <datalist id="status-suggestions"></datalist>
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Quantity</label>
@@ -510,6 +515,21 @@
                         <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Cut Style</label>
                         <input type="text" id="cut" list="cut-suggestions" placeholder="Select cut style..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
                         <datalist id="cut-suggestions"></datalist>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Certificate</label>
+                        <input type="text" id="cert" list="cert-suggestions" placeholder="Select certificate for the gem.." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
+                        <datalist id="cert-suggestions"></datalist>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Shape</label>
+                        <input type="text" id="shape" list="shape-suggestions" placeholder="Select shape..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
+                        <datalist id="shape-suggestions"></datalist>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Classification</label>
+                        <input type="text" id="classification" list="class-suggestions" placeholder="Select classification..." class="w-full px-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
+                        <datalist id="class-suggestions"></datalist>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
@@ -899,6 +919,30 @@
                 const countryList = (gemInfo && gemInfo["Country"]) ? gemInfo["Country"] : [];
                 countrySug.innerHTML = countryList.map(c => `<option value="${c}">`).join('');
             }
+
+            const certSug = document.getElementById('cert-suggestions');
+            if (certSug) {
+                const certList = (gemInfo && gemInfo["Certificate"]) ? gemInfo["Certificate"] : [];
+                certSug.innerHTML = certList.map(c => `<option value="${c}">`).join('');
+            }
+
+            const shapeSug = document.getElementById('shape-suggestions');
+            if (shapeSug) {
+                const shapeList = (gemInfo && gemInfo["Shape"]) ? gemInfo["Shape"] : [];
+                shapeSug.innerHTML = shapeList.map(c => `<option value="${c}">`).join('');
+            }
+
+            const classSug = document.getElementById('class-suggestions');
+            if (classSug) {
+                const classList = (gemInfo && gemInfo["Classification"]) ? gemInfo["Classification"] : [];
+                classSug.innerHTML = classList.map(c => `<option value="${c}">`).join('');
+            }
+
+            const statusSug = document.getElementById('status-suggestions');
+            if (statusSug) {
+                const statusList = (gemInfo && gemInfo["Status"]) ? gemInfo["Status"] : [];
+                statusSug.innerHTML = statusList.map(c => `<option value="${c}">`).join('');
+            }
         };
 
         window.openModal = (mode, id = null) => {
@@ -938,6 +982,10 @@
                 country: document.getElementById('country').value,
                 color: document.getElementById('color').value,
                 cut: document.getElementById('cut').value,
+                cert: document.getElementById('cert').value,
+                classification: document.getElementById('classification').value,
+                shape: document.getElementById('shape').value,
+                status: document.getElementById('status').value,                
                 buyingCurrency: document.getElementById('buyingCurrency').value,
                 buyingPrice: parseFloat(document.getElementById('buyingPrice').value),
                 purchaseDate: document.getElementById('purchaseDate').value,
