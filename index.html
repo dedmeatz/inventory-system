@@ -187,7 +187,16 @@
                             <option value="5+">5+ CT</option>
                         </select>
                         <select id="filter-quality" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
-                            <option value="">All Grades</option>
+                            <option value="">All Grades</option> 
+                        </select>
+                        <select id="filter-status" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                            <option value="">All Status</option> 
+                        </select>
+                        <select id="filter-cut" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                            <option value="">All Cut</option>
+                        </select>
+                        <select id="filter-shape" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                            <option value="">All Shapes</option>
                         </select>
                         <select id="sort-by" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm">
                             <option value="purchaseDate">Date (Newest)</option>
@@ -220,8 +229,9 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-[#F9F6EE] border-b border-gold-border hide-on-mobile">
                             <tr>
-                                <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Item / Variety</th>
-                                <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Weight & Quality</th>
+                                <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Lot No. / Gemstone</th>
+                                <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Weight & Color</th>
+                                <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Cut & Shape</th>
                                 <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Purchased</th>
                                 <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em] text-center">Availability</th>
                                 <th class="px-8 py-5 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em] text-right">Actions</th>
@@ -841,12 +851,18 @@
             const typeFilter = getVal('filter-type');
             const weightFilter = getVal('filter-weight');
             const qualityFilter = getVal('filter-quality');
+            const statusFilter = getVal('filter-status');
+            const cutFilter = getVal('filter-cut');
+            const shapeFilter = getVal('filter-shape');
             const sortBy = getVal('sort-by');
 
             let filtered = stock.filter(item => {
                 const matchesSearch = (item.lotName || "").toLowerCase().includes(search) || (item.type || "").toLowerCase().includes(search);
                 const matchesType = typeFilter === "" || item.type === typeFilter;
                 const matchesQuality = qualityFilter === "" || item.color === qualityFilter;
+                const matchesStatus = statusFilter === "" || item.status === statusFilter;
+                const matchesCut = cutFilter === "" || item.cut === cutFilter;
+                const matchesShape = shapeFilter === "" || item.shape === shapeFilter;
                 let matchesWeight = true;
                 if (weightFilter !== "") {
                     const w = parseFloat(item.weight || 0);
@@ -855,7 +871,7 @@
                     else if (weightFilter === "3-5") matchesWeight = w > 3 && w <= 5;
                     else if (weightFilter === "5+") matchesWeight = w > 5;
                 }
-                return matchesSearch && matchesType && matchesQuality && matchesWeight;
+                return matchesSearch && matchesType && matchesQuality && matchesWeight && matchesCut && matchesShape && matchesStatus;
             });
 
             filtered.sort((a, b) => {
@@ -878,6 +894,7 @@
                 row.innerHTML = `
                     <td class="px-8 py-6 data-cell"><span class="mobile-label">Identity</span><div class="flex items-center gap-2"><span class="font-bold text-gray-900 text-lg sm:text-base">${item.lotName || 'Unnamed'}</span><span class="text-[9px] font-bold text-[#B8860B] bg-[#FDF7E2] px-2 py-0.5 rounded uppercase tracking-widest border border-gold-border">${item.type || 'Standard'}</span></div></td>
                     <td class="px-8 py-6 data-cell"><span class="mobile-label">Gem Details</span><div class="flex items-center gap-2 text-sm"><span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span><span class="text-xs text-gray-500 font-serif italic">${item.color || 'Standard Grade'}</span></div></td>
+                    <td class="px-8 py-6 data-cell"><span class="mobile-label">Cut/Shape</span><div class="flex items-center gap-2 text-sm"><span class="font-semibold text-gray-700">${item.cut || 'None'} </span><span class="text-xs text-gray-500 font-serif italic">${item.shape || 'None'}</span></div></td>
                     <td class="px-8 py-6 data-cell"><span class="mobile-label">Purchased</span><div class="flex items-center gap-2 text-sm"><span class="font-bold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span><span class="text-[10px] text-gray-400 font-mono">${formatDate(item.purchaseDate)}</span></div></td>
                     <td class="px-8 py-6 data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-center"><span class="text-2xl font-black text-gray-900">${item.quantity}</span></div></td>
                     <td class="px-8 py-6 data-cell text-right"><div class="flex sm:justify-end gap-3 flex-1"><button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 bg-green-600 text-white text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-green-700 transition-all shadow-sm">Sale</button></div></td>`;
@@ -889,12 +906,21 @@
         window.updateFilters = () => {
             const types = [...new Set(stock.map(i => i.type).filter(Boolean))];
             const colorsInStock = [...new Set(stock.map(i => i.color).filter(Boolean))];
+            const cutsInStock = [...new Set(stock.map(i => i.cut).filter(Boolean))];
+            const shapesInStock = [...new Set(stock.map(i => i.shape).filter(Boolean))];
+            const statusInStock = [...new Set(stock.map(i => i.status).filter(Boolean))];
             const filterType = document.getElementById('filter-type');
             const filterQuality = document.getElementById('filter-quality');
+            const filterStatus = document.getElementById('filter-status');
+            const filterCut = document.getElementById('filter-cut');
+            const filterShape = document.getElementById('filter-shape');
             
             if (filterType) filterType.innerHTML = '<option value="">All Variety</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
             if (filterQuality) filterQuality.innerHTML = '<option value="">All Grades</option>' + colorsInStock.map(q => `<option value="${q}">${q}</option>`).join('');
-            
+            if (filterStatus) filterStatus.innerHTML = '<option value="">All Status</option>' + statusInStock.map(q => `<option value="${q}">${q}</option>`).join('');
+            if (filterCut) filterCut.innerHTML = '<option value="">All Cuts</option>' + cutsInStock.map(q => `<option value="${q}">${q}</option>`).join('');
+            if (filterShape) filterShape.innerHTML = '<option value="">All Shapes</option>' + shapesInStock.map(q => `<option value="${q}">${q}</option>`).join('');
+
             // Registration Modal Datalists
             const typeSug = document.getElementById('type-suggestions');
             if (typeSug) {
