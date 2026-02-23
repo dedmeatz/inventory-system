@@ -6,8 +6,9 @@
     <title>Nawarat Inventory System</title>
     <link rel="manifest" href="/inventory-system/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-icon" href="/inventory-system/img/icon.png">
     <link rel="icon" type="image/png" href="/inventory-system/img/favicon.png">
+    <link rel="stylesheet" href="/inventory-system/styles.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         if ('serviceWorker' in navigator) {
@@ -15,116 +16,6 @@
         }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        :root {
-            --gold-primary: #D4AF37;
-            --gold-secondary: #C5A028;
-            --gold-light: #F9F6EE;
-            --gold-border: #E5D5A1;
-        }
-
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #fdfdfc; }
-        h1, h2, h3 { font-family: 'Playfair Display', serif; }
-
-        .modal-active { overflow: hidden; }
-        .tab-active { border-bottom: 3px solid var(--gold-primary); color: var(--gold-primary); font-weight: 700; }
-        .loading-overlay { background: rgba(255, 255, 255, 0.95); z-index: 100; backdrop-filter: blur(8px); }
-        
-        .gold-button {
-            background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .gold-button:hover {
-            background: linear-gradient(135deg, #E5D5A1 0%, #D4AF37 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-        }
-
-        .mobile-label { display: none; }
-
-        @media (max-width: 640px) {
-            .mobile-label { 
-                display: block; 
-                font-size: 0.6rem; 
-                color: #A3A3A3; 
-                font-weight: 700; 
-                text-transform: uppercase; 
-                margin-right: 8px;
-                letter-spacing: 0.05em;
-                min-width: 80px;
-            }
-            .data-row { 
-                display: flex !important;
-                flex-direction: column; 
-                gap: 0.4rem; 
-                padding: 0.65rem 0.9rem !important; 
-                background: white;
-                margin-bottom: 0.5rem;
-                border: 1px solid var(--gold-border);
-                border-radius: 12px;
-            }
-            .data-cell { 
-                padding: 0 !important; 
-                border: none !important; 
-                display: flex !important;
-                align-items: center;
-                justify-content: flex-start;
-                text-align: left !important;
-            }
-            .hide-on-mobile { display: none !important; }
-            .stock-badge-mobile { 
-                position: absolute; 
-                top: 0.85rem; 
-                right: 1.25rem;
-            }
-            .pagination-container {
-                position: sticky;
-                bottom: 0;
-                background: white;
-                padding: 1rem;
-                border-top: 1px solid var(--gold-border);
-                box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-            }
-            #transaction-body {
-                display: block;
-                padding: 0.5rem;
-            }
-            #view-transactions table, #view-transactions thead, #view-transactions tbody, #view-transactions th, #view-transactions td, #view-transactions tr {
-                display: block;
-            }
-            #view-transactions thead {
-                display: none;
-            }
-            #filter-controls-container {
-                display: none;
-            }
-            #mobile-filter-overlay.active {
-                display: flex !important;
-            }
-        }
-
-        .gold-card {
-            border: 1px solid var(--gold-border);
-            background: white;
-        }
-
-        /* Accordion Styles */
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-        .accordion-item.active .accordion-content {
-            max-height: 1000px;
-            transition: max-height 0.5s ease-in;
-        }
-        .accordion-item.active .accordion-icon {
-            transform: rotate(180deg);
-        }
-    </style>
 </head>
 <body class="min-h-screen text-gray-800 antialiased">
 
