@@ -285,10 +285,9 @@
                         <thead class="bg-[#F9F6EE] text-[#B8860B] uppercase text-[9px] font-bold tracking-widest hide-on-mobile">
                             <tr>
                                 <th class="px-8 py-4">Date & Time</th>
-                                <th class="px-8 py-4 text-center">Action</th>
                                 <th class="px-8 py-4">Lot Name / Details</th>
-                                <th class="px-8 py-4 text-center">Qty</th>
-                                <th class="px-8 py-4">Total Transaction Value</th>
+                                <th class="px-8 py-4 text-center">Qty - Txn Value</th>
+                                <th class="px-8 py-4 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody id="transaction-body" class="divide-y divide-[#FDF7E2]"></tbody>
@@ -589,7 +588,7 @@
 
     <!-- Sale Modal -->
     <div id="sell-modal" class="fixed inset-0 bg-gray-900/40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-md overflow-hidden p-4 border-t-4 border-green-600 shadow-2xl">
+        <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-md overflow-hidden p-4 border-t-4 border-[#C5A059] shadow-2xl">
             <h3 class="text-2xl font-bold text-gray-900 mb-2">Record Sale</h3>
             <p id="sell-item-info" class="text-sm text-gray-500 mb-2 font-serif"></p>
             <div class="space-y-2">
@@ -614,8 +613,8 @@
                     <input type="text" id="sell-share" placeholder="100%" class="w-full px-2 py-2 border border-gold-border rounded-xl outline-none focus:ring-1 focus:ring-[#D4AF37]">
                 </div>
                 <div class="flex flex-col gap-2 pt-2">
-                    <button onclick="confirmSell()" class="w-full py-4 bg-green-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-green-100">Confirm & Deduct</button>
-                    <button onclick="closeSellModal()" class="w-full py-4 bg-gray-50 text-gray-500 rounded-xl font-bold uppercase tracking-widest text-xs">Cancel</button>
+                    <button onclick="confirmSell()" class="w-full py-4 bg-[#C5A059] text-white rounded-xl font-bold uppercase tracking-widest text-xs shadow-sm shadow-[#C5A059]">Confirm & Deduct</button>
+                    <button onclick="closeSellModal()" class="w-full py-4 bg-gray-50 border-2 border-[#C5A059] text-gray-500 rounded-xl font-bold uppercase tracking-widest text-xs">Cancel</button>
                 </div>
             </div>
         </div>
@@ -908,7 +907,8 @@
                     <td class="px-8 py-6 data-cell"><span class="mobile-label">Gem Details</span><div class="flex items-center gap-2 text-xs"><span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span><span class="text-[10px] text-gray-500">${item.color || 'Standard Grade'}</span></div></td>
                     <td class="px-8 py-6 data-cell"><span class="mobile-label">Cut/Shape</span><div class="flex items-center gap-2 text-sm"><span class="font-semibold text-gray-700">${item.cut || 'None'} </span><span class="text-[10px] text-gray-500">${item.shape || 'None'}</span></div></td>
                     <td class="px-8 py-6 data-cell"><span class="mobile-label">Purchased</span><div class="flex items-center gap-2 text-xs"><span class="font-semibold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span><span class="text-[9px] text-gray-400">${formatDate(item.purchaseDate)}</span></div></td>
-                    <td class="px-8 py-6 data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="text-xl font-black text-gray-900">${item.quantity}</span><span class="text-[10px] text-gray-400 mb-2">${item.status || 'N/A'}</span><span class="flex sm:justify-end items-center"><button onclick="openSellModal('${item.id}')" class="px-3 py-2.5 bg-green-600 text-white text-[11px] font-bold rounded-lg uppercase tracking-wider hover:bg-green-700 transition-all shadow-sm">Sale</button></span></div></td>`;
+                    <td class="px-8 py-6 data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="text-xl font-black text-gray-900">${item.quantity}</span><span class="text-[10px] text-gray-400 mb-2">${item.status || 'N/A'}</span><span class="flex sm:justify-end items-center"><button onclick="openSellModal('${item.id}')" class="md:hidden px-3 py-2.5 border-2 border-[#C5A059] text-[#C5A059] text-white text-[11px] font-bold rounded-lg uppercase tracking-wider hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button></span></div></td>
+                    <td class="px-8 py-6 data-cell text-right"><div class="hidden md:flex md:gap-1 md:flex-1"><button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 border-2 border-[#C5A059] text-[#C5A059] text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button></div></td>`;
                 container.appendChild(row);
             });
             renderPaginationControls('stock-pagination', totalItems, stockCurrentPage, 'setStockPage');
@@ -1124,7 +1124,7 @@
                 const row = document.createElement('tr');
                 row.className = "hover:bg-gold-light/20 transition-colors text-[11px] data-row relative";
                 const actionClass = t.action === 'BUY' ? 'text-blue-700 bg-blue-50 border-blue-100' : 'text-green-700 bg-green-50 border-green-100';
-                row.innerHTML = `<td class="px-4 py-3 text-gray-400 font-mono data-cell"><span class="mobile-label">Date</span>${formatDateTime(t.timestamp)}</td><td class="px-4 py-3 data-cell"><span class="mobile-label">Lot</span><div class="flex items-center gap-2"><span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span><span class="text-[9px] text-gray-400 uppercase">${t.type || 'Standard'} • ${t.weight || '0'} CT</span></div></td><td class="px-4 py-3 text-center font-black text-gray-600 data-cell"><span class="mobile-label">Qty</span>${t.quantity || 0}</td><td class="px-4 py-3 font-bold text-gray-900 data-cell"><span class="mobile-label">Value</span>${t.totalValue || 'N/A'}</td><td class="px-8 py-3 text-center data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="px-1.5 py-0.5 rounded-md font-bold border ${actionClass}">${t.action}</span></div></td>`;
+                row.innerHTML = `<td class="px-4 py-3 font-black text-gray-600 data-cell">${formatDateTime(t.timestamp)}</td><td class="px-4 py-3 data-cell"><div class="flex items-center gap-2"><span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span><span class="text-[9px] text-gray-400 uppercase">${t.type || 'Standard'} • ${t.weight || '0'} CT</span></div></td><td class="px-4 py-3 text-center font-black text-gray-600 data-cell">Qty: ${t.quantity || 0} - Sold for: ${t.totalValue}</td><td class="px-8 py-3 text-center data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="font-bold text-[#C5A059]">${t.action}</span></div></td>`;
                 tbody.appendChild(row);
             });
             renderPaginationControls('trans-pagination', totalItems, transCurrentPage, 'setTransPage');
