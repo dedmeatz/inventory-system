@@ -769,13 +769,13 @@
                             <!-- Visual Accent -->
                             <div class="relative z-10">
                                 <div items-center" onclick="openModal('edit', '${item.id}')">
-                                    <p class="text-[9px] font-semibold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest mb-1">${item.type || 'Standard'}</p>
-                                    <p class="text-[9px] font-semibold text-gray-700">${item.weight || '0'} CT</p>
+                                    <p class="text-[10px] font-semibold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest mb-1">${item.type || 'Standard'}</p>
+                                    <p class="text-[11px] font-semibold text-gray-700">${item.weight || '0'} CT</p>
+                                    <p class="text-[10px] font-semibold text-gray-800">${formatDate(item.purchaseDate)}</p>
                                     <p class="text-[9px] font-semibold text-gray-500">${item.color || 'Standard Grade'}</p>
                                     <p class="text-[9px] font-semibold text-gray-700">${item.cut || 'None'} • ${item.shape || 'None'}</p>
-                                    <p class="text-[9px] font-semibold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</p>
                                     <p class="text-[9px] font-semibold text-gray-800 mb-2">Stock: ${item.quantity} • ${item.status || 'N/A'}</p>
-                                    <button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-3 py-1 border-2 border-[#C5A059] text-[#C5A059] text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
+                                    <button onclick="event.stopPropagation(); openSellModal('${item.id}')" class="flex-1 sm:flex-none px-3 py-1 border-2 border-[#C5A059] text-[#C5A059] text-[10px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
                                 </div>
                             </div>
                         </div>
@@ -1060,7 +1060,7 @@
         window.openSellModal = (id) => {
             const item = stock.find(i => i.id === id);
             sellTargetId = id;
-            document.getElementById('sell-item-info').innerText = `Recording sale for ${item.lotName}. Stock: ${item.quantity}.`;
+            document.getElementById('sell-item-info').innerText = `Stock: ${item.quantity}. Purchase Price: ${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}`;
             document.getElementById('sell-qty').max = item.quantity;
             document.getElementById('sell-qty').value = 1;
             document.getElementById('sell-share').value = item.share || '100%';
