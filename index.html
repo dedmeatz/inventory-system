@@ -67,7 +67,7 @@
                             New Purchase
                             </button>
                             <!-- View Toggle -->
-                            <div class="flex p-1 rounded-xl border border-[#C5A059]">
+                            <div class="flex p-1 rounded-xl gold-border-std">
                                 <button onclick="setViewMode('list')" id="view-list-button" class="p-2 rounded-lg transition-all text-white bg-[#C5A059]" title="List View">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                                 </button>
@@ -769,13 +769,13 @@
                             <!-- Visual Accent -->
                             <div class="relative z-10">
                                 <div items-center" onclick="openModal('edit', '${item.id}')">
-                                    <p class="text-[10px] font-semibold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest mb-1">${item.type || 'Standard'}</p>
-                                    <p class="text-[11px] font-semibold text-gray-700">${item.weight || '0'} CT</p>
-                                    <p class="text-[10px] font-semibold text-gray-800">${formatDate(item.purchaseDate)}</p>
-                                    <p class="text-[9px] font-semibold text-gray-500">${item.color || 'Standard Grade'}</p>
-                                    <p class="text-[9px] font-semibold text-gray-700">${item.cut || 'None'} • ${item.shape || 'None'}</p>
-                                    <p class="text-[9px] font-semibold text-gray-800 mb-2">Stock: ${item.quantity} • ${item.status || 'N/A'}</p>
-                                    <button onclick="event.stopPropagation(); openSellModal('${item.id}')" class="flex-1 sm:flex-none px-3 py-1 border-2 border-[#C5A059] text-[#C5A059] text-[10px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
+                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest mb-1">${item.type || 'Standard'}</p>
+                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-700">${item.weight || '0'} CT</p>
+                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-800">${formatDate(item.purchaseDate)}</p>
+                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-500">${item.color || 'Standard Grade'}</p>
+                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-700">${item.cut || 'None'} • ${item.shape || 'None'}</p>
+                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-800 mb-2">Stock: ${item.quantity} • ${item.status || 'N/A'}</p>
+                                    <button onclick="event.stopPropagation(); openSellModal('${item.id}')" class="flex-1 sm:flex-none px-3 py-1 gold-border-std-2 text-[#C5A059] text-[10px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
                                 </div>
                             </div>
                         </div>
@@ -918,8 +918,8 @@
                     <td class="px-4 py-2 data-cell"><span class="mobile-label">Gem Details</span><div class="flex items-center gap-2 text-xs"><span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span><span class="text-[10px] text-gray-500">${item.color || 'Standard Grade'}</span></div></td>
                     <td class="px-4 py-2 data-cell"><span class="mobile-label">Cut/Shape</span><div class="flex items-center gap-2 text-sm"><span class="font-semibold text-gray-700">${item.cut || 'None'} </span><span class="text-[10px] text-gray-500">${item.shape || 'None'}</span></div></td>
                     <td class="px-4 py-2 data-cell"><span class="mobile-label">Purchased</span><div class="flex items-center gap-2 text-xs"><span class="font-semibold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span><span class="text-[9px] text-gray-400">${formatDate(item.purchaseDate)}</span></div></td>
-                    <td class="px-4 py-2 data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="text-xl font-black text-gray-900">${item.quantity}</span><span class="text-[10px] text-gray-400 mb-2">${item.status || 'N/A'}</span><span class="flex sm:justify-end items-center"><button onclick="openSellModal('${item.id}')" class="md:hidden px-3 py-2.5 border-2 border-[#C5A059] text-[#C5A059] text-white text-[11px] font-bold rounded-lg uppercase tracking-wider hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button></span></div></td>
-                    <td class="px-4 py-2 data-cell text-right"><div class="hidden md:flex md:gap-1 md:flex-1"><button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 border-2 border-[#C5A059] text-[#C5A059] text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button></div></td>`;
+                    <td class="px-4 py-2 data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="text-xl font-black text-gray-900">${item.quantity}</span><span class="text-[10px] text-gray-400 mb-2">${item.status || 'N/A'}</span><span class="flex sm:justify-end items-center"><button onclick="openSellModal('${item.id}')" class="md:hidden px-3 py-2.5 gold-border-std-2 text-[#C5A059] text-white text-[11px] font-bold rounded-lg uppercase tracking-wider hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button></span></div></td>
+                    <td class="px-4 py-2 data-cell text-right"><div class="hidden md:flex md:gap-1 md:flex-1"><button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 gold-border-std-2 text-[#C5A059] text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button></div></td>`;
                 container.appendChild(row);
             });
             renderPaginationControls('stock-pagination', totalItems, stockCurrentPage, 'setStockPage');

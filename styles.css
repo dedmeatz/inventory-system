@@ -25,6 +25,16 @@ h1, h2, h3 { font-family: 'Playfair Display', serif; }
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 
+.gold-border-std {
+    border-width: 1px;
+    border-color: #C5A059;
+}
+
+.gold-border-std-2 {
+    border-width: 2px;
+    border-color: #C5A059;
+}
+
 .mobile-label { display: none; }
 
 @media (max-width: 640px) {
