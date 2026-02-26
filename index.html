@@ -1133,8 +1133,7 @@
             const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
             paginated.forEach(t => {
                 const row = document.createElement('tr');
-                row.className = "hover:bg-gold-light/20 transition-colors text-[11px] data-row relative";
-                const actionClass = t.action === 'BUY' ? 'text-blue-700 bg-blue-50 border-blue-100' : 'text-green-700 bg-green-50 border-green-100';
+                row.className = "hover:bg-gold-light/20 transition-colors text-[11px] data-row gap-0.5 relative";
                 row.innerHTML = `<td class="px-4 py-3 font-black text-gray-600 data-cell">${formatDateTime(t.timestamp)}</td><td class="px-4 py-3 data-cell"><div class="flex items-center gap-2"><span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span><span class="text-[9px] text-gray-400 uppercase">${t.type || 'Standard'} • ${t.weight || '0'} CT</span></div></td><td class="px-4 py-3 text-center font-black text-gray-600 data-cell">Qty: ${t.quantity || 0} - Sold for: ${t.totalValue}</td><td class="px-8 py-3 text-center data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="font-bold text-[#C5A059]">${t.action}</span></div></td>`;
                 tbody.appendChild(row);
             });
