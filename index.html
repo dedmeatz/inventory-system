@@ -60,7 +60,7 @@
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#D4AF37]">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </span>
-                            <input type="text" id="search-input" oninput="resetStockPage(); renderStock()" placeholder="Search" class="w-full pl-12 pr-4 py-3 border border-gold-border rounded-xl focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none transition-all bg-white text-sm shadow-sm">
+                            <input type="text" id="search-input" oninput="resetStockPage(); renderStockView();" placeholder="Search" class="w-full pl-12 pr-4 py-3 border border-gold-border rounded-xl focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none transition-all bg-white text-sm shadow-sm">
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="openModal('buy')" class="gold-button px-6 py-4 rounded-xl font-bold shadow-lg flex-1 items-center justify-center gap-2 uppercase tracking-widest text-[10px] whitespace-nowrap">
@@ -79,29 +79,29 @@
                     </div>
 
                     <div id="filter-controls-container" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <select id="filter-type" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-type" onchange="resetStockPage();renderStockView();" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Variety</option>
                         </select>
-                        <select id="filter-weight" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-weight" onchange="resetStockPage();renderStockView();" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Weights</option>
                             <option value="0-1">0 - 1 CT</option>
                             <option value="1-3">1 - 3 CT</option>
                             <option value="3-5">3 - 5 CT</option>
                             <option value="5+">5+ CT</option>
                         </select>
-                        <select id="filter-quality" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-quality" onchange="resetStockPage();renderStockView();" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Grades</option> 
                         </select>
-                        <select id="filter-status" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-status" onchange="resetStockPage();renderStockView();" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Status</option> 
                         </select>
-                        <select id="filter-cut" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-cut" onchange="resetStockPage();renderStockView();" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Cut</option>
                         </select>
-                        <select id="filter-shape" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                        <select id="filter-shape" onchange="resetStockPage();renderStockView();" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                             <option value="">All Shapes</option>
                         </select>
-                        <select id="sort-by" onchange="resetStockPage(); renderStock()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm">
+                        <select id="sort-by" onchange="resetStockPage();renderStockView();" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm">
                             <option value="purchaseDate">Date (Newest)</option>
                             <option value="lotName">Name (A-Z)</option>
                             <option value="weight">Weight (High-Low)</option>
@@ -719,6 +719,10 @@
             }
         };
 
+        window.renderStockView = () => {
+            viewMode === 'list' ? renderStock() : renderGridView();
+        };
+
         const renderGridView = () => {
             const container = document.getElementById('main-stock-container');
             const searchInput = document.getElementById('search-input');
@@ -879,7 +883,11 @@
             const sortBy = getVal('sort-by');
 
             let filtered = stock.filter(item => {
-                const matchesSearch = (item.lotName || "").toLowerCase().includes(search) || (item.type || "").toLowerCase().includes(search);
+                const matchesSearch = (item.lotName || "").toLowerCase().includes(search) || 
+                    (item.type || "").toLowerCase().includes(search) || 
+                    (item.color || "").toLowerCase().includes(search) || 
+                    (item.cut || "").toLowerCase().includes(search) || 
+                    (item.shape || "").toLowerCase().includes(search);
                 const matchesType = typeFilter === "" || item.type === typeFilter;
                 const matchesQuality = qualityFilter === "" || item.color === qualityFilter;
                 const matchesStatus = statusFilter === "" || item.status === statusFilter;
@@ -914,12 +922,44 @@
                 row.className = "group hover:bg-[#FDF7E2] transition-colors data-row cursor-pointer relative";
                 row.onclick = (e) => { if (e.target.closest('button')) return; openModal('edit', item.id); };
                 row.innerHTML = `
-                    <td class="px-4 py-2 data-cell"><span class="mobile-label">Identity</span><div class="flex items-center gap-2"><span class="text-[11px] font-bold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest">${item.type || 'Standard'}</span><span class="text-gray-900 text-[9px] sm:text-[9px]">${item.lotName || 'Unnamed'}</span></div></td>
-                    <td class="px-4 py-2 data-cell"><span class="mobile-label">Gem Details</span><div class="flex items-center gap-2 text-xs"><span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span><span class="text-[10px] text-gray-500">${item.color || 'Standard Grade'}</span></div></td>
-                    <td class="px-4 py-2 data-cell"><span class="mobile-label">Cut/Shape</span><div class="flex items-center gap-2 text-sm"><span class="font-semibold text-gray-700">${item.cut || 'None'} </span><span class="text-[10px] text-gray-500">${item.shape || 'None'}</span></div></td>
-                    <td class="px-4 py-2 data-cell"><span class="mobile-label">Purchased</span><div class="flex items-center gap-2 text-xs"><span class="font-semibold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span><span class="text-[9px] text-gray-400">${formatDate(item.purchaseDate)}</span></div></td>
-                    <td class="px-4 py-2 data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="text-xl font-black text-gray-900">${item.quantity}</span><span class="text-[10px] text-gray-400 mb-2">${item.status || 'N/A'}</span><span class="flex sm:justify-end items-center"><button onclick="openSellModal('${item.id}')" class="md:hidden px-3 py-2.5 gold-border-std-2 text-[#C5A059] text-white text-[11px] font-bold rounded-lg uppercase tracking-wider hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button></span></div></td>
-                    <td class="px-4 py-2 data-cell text-right"><div class="hidden md:flex md:gap-1 md:flex-1"><button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 gold-border-std-2 text-[#C5A059] text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button></div></td>`;
+                    <td class="px-4 py-2 data-cell">
+                        <span class="mobile-label">Identity</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-bold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest">${item.type || 'Standard'}</span>
+                            <span class="text-gray-900 text-[9px] sm:text-[9px]">${item.lotName || 'Unnamed'}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-2 data-cell">
+                        <span class="mobile-label">Gem Details</span>
+                        <div class="flex items-center gap-2 text-xs"><span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span><span class="text-[10px] text-gray-500">${item.color || 'Standard Grade'}</span></div></td>
+                    <td class="px-4 py-2 data-cell">
+                        <span class="mobile-label">Cut/Shape</span>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="font-semibold text-gray-700">${item.cut || 'None'} </span>
+                            <span class="text-[10px] text-gray-500">${item.shape || 'None'}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-2 data-cell">
+                        <span class="mobile-label">Purchased</span>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="font-semibold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span>
+                            <span class="text-[9px] text-gray-400">${formatDate(item.purchaseDate)}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-2 data-cell sm:text-center">
+                        <div class="stock-badge-mobile inline-flex flex-col sm:items-end">
+                            <span class="text-xl font-black text-gray-900">${item.quantity}</span>
+                            <span class="text-[10px] text-gray-400 mb-2">${item.status || 'N/A'}</span>
+                            <span class="flex sm:justify-end items-center">
+                                <button onclick="openSellModal('${item.id}')" class="md:hidden px-3 py-2.5 gold-border-std-2 text-[#C5A059] text-white text-[11px] font-bold rounded-lg uppercase tracking-wider hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-2 data-cell text-right">
+                        <div class="hidden md:flex md:gap-1 md:flex-1">
+                            <button onclick="openSellModal('${item.id}')" class="flex-1 sm:flex-none px-6 py-2.5 gold-border-std-2 text-[#C5A059] text-[9px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
+                        </div
+                    </td>`;
                 container.appendChild(row);
             });
             renderPaginationControls('stock-pagination', totalItems, stockCurrentPage, 'setStockPage');
@@ -1134,7 +1174,20 @@
             paginated.forEach(t => {
                 const row = document.createElement('tr');
                 row.className = "hover:bg-gold-light/20 transition-colors text-[11px] data-row gap-0.5 relative";
-                row.innerHTML = `<td class="px-4 py-3 font-black text-gray-600 data-cell">${formatDateTime(t.timestamp)}</td><td class="px-4 py-3 data-cell"><div class="flex items-center gap-2"><span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span><span class="text-[9px] text-gray-400 uppercase">${t.type || 'Standard'} • ${t.weight || '0'} CT</span></div></td><td class="px-4 py-3 text-center font-black text-gray-600 data-cell">Qty: ${t.quantity || 0} - Sold for: ${t.totalValue}</td><td class="px-8 py-3 text-center data-cell sm:text-center"><div class="stock-badge-mobile inline-flex flex-col sm:items-end"><span class="font-bold text-[#C5A059]">${t.action}</span></div></td>`;
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-black text-gray-600 data-cell">${formatDateTime(t.timestamp)}</td>
+                    <td class="px-4 py-3 data-cell">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-800">${t.lotName || 'N/A'}</span>
+                            <span class="text-[9px] text-gray-400 uppercase">${t.type || 'Standard'} • ${t.weight || '0'} CT</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-center font-black text-gray-600 data-cell">Qty: ${t.quantity || 0} - Sold for: ${t.totalValue}</td>
+                    <td class="px-8 py-3 text-center data-cell sm:text-center">
+                        <div class="stock-badge-mobile inline-flex flex-col sm:items-end">
+                            <span class="font-bold text-[#C5A059]">${t.action}</span>
+                        </div>
+                    </td>`;
                 tbody.appendChild(row);
             });
             renderPaginationControls('trans-pagination', totalItems, transCurrentPage, 'setTransPage');
