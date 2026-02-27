@@ -282,35 +282,34 @@
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <!-- Admin Sidebar -->
                 <div class="lg:col-span-1 flex flex-col gap-2">
-                    <button onclick="switchAdminSubTab('inventory')" id="admin-subtab-inventory" class="w-full text-left px-4 py-3 rounded-xl bg-gold-light text-[#D4AF37] font-bold text-xs uppercase tracking-widest border border-gold-border">Import Inventory</button>
-                    <button onclick="switchAdminSubTab('transactions')" id="admin-subtab-transactions" class="w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Import Transactions</button>
-                    <button onclick="switchAdminSubTab('geminfo')" id="admin-subtab-geminfo" class="w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Gem Info</button>
-                    <button onclick="switchAdminSubTab('extract')" id="admin-subtab-extract" class="w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Extract Data</button>
+                    <button onclick="switchAdminSubTab('inventory')" id="admin-subtab-inventory" class="w-full text-left px-2 py-2 rounded-xl bg-gold-light text-[#D4AF37] font-bold text-xs uppercase tracking-widest border border-gold-border">Import Inventory</button>
+                    <button onclick="switchAdminSubTab('transactions')" id="admin-subtab-transactions" class="w-full text-left px-2 py-2 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Import Transactions</button>
+                    <button onclick="switchAdminSubTab('geminfo')" id="admin-subtab-geminfo" class="w-full text-left px-2 py-2 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Gem Info</button>
+                    <button onclick="switchAdminSubTab('extract')" id="admin-subtab-extract" class="w-full text-left px-2 py-2 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all">Extract Data</button>
                 </div>
                 
                 <!-- Admin Content -->
                 <div class="lg:col-span-3">
                     <!-- Gem Info Subtab -->
-                    <div id="admin-panel-geminfo" class="hidden space-y-6">
-                        <div class="gold-card rounded-2xl p-8 shadow-sm">
+                    <div id="admin-panel-geminfo" class="hidden space-y-3">
+                        <div class="gold-card rounded-2xl p-4 shadow-sm">
                             <h2 class="text-xl font-bold text-gray-900 mb-2">Gem Reference Data</h2>
-                            <p class="text-xs text-gray-500 mb-8">Manage dropdown values for consistent data entry.</p>
                             
-                            <div class="space-y-4" id="gem-info-accordions">
+                            <div class="space-y-2" id="gem-info-accordions">
                                 <!-- Accordions will be injected here -->
                             </div>
                         </div>
                     </div>
 
                     <!-- Inventory Import Subtab -->
-                    <div id="admin-panel-inventory" class="gold-card rounded-2xl p-8 shadow-sm">
+                    <div id="admin-panel-inventory" class="gold-card rounded-2xl p-3 shadow-sm">
                         <h2 class="text-xl font-bold text-gray-900 mb-2">Bulk Import Inventory</h2>
-                        <p class="text-xs text-gray-500 mb-8">Upload an .xlsx file. If <b>lotName</b> exists, it will be updated. Otherwise, a new record is created.</p>
+                        <p class="text-xs text-gray-500 mb-3">Upload an .xlsx file. If <b>lotName</b> exists, it will be updated. Otherwise, a new record is created.</p>
                         
                         <div class="border-2 border-dashed border-gold-border rounded-2xl p-12 text-center bg-gray-50/50">
                             <input type="file" id="import-excel" accept=".xlsx, .xls" class="hidden">
                             <label for="import-excel" class="cursor-pointer flex flex-col items-center">
-                                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-gold-border mb-4 text-[#D4AF37]">
+                                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-gold-border mb-2 text-[#D4AF37]">
                                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                                 </div>
                                 <span class="text-sm font-bold text-gray-700">Choose Inventory File</span>
@@ -324,7 +323,7 @@
                             </div>
                         </div>
 
-                        <div class="mt-8 p-4 bg-[#F9F6EE] rounded-xl border border-gold-border">
+                        <div class="mt-4 p-2 bg-[#F9F6EE] rounded-xl border border-gold-border">
                             <h3 class="text-[10px] font-bold text-[#B8860B] uppercase tracking-widest mb-3">Expected Column Headers:</h3>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[9px] font-mono text-gray-500">
                                 <div>• lotName</div><div>• type</div><div>• quantity</div><div>• weight</div><div>• color</div><div>• cut</div><div>• buyingCurrency</div><div>• buyingPrice</div><div>• purchaseDate</div><div>• share</div><div>• classification</div><div>• country</div><div>• shape</div><div>• cert</div><div>• status</div>
@@ -646,12 +645,12 @@
             const btnExt = document.getElementById('admin-subtab-extract');
 
             [btnInv, btnTrans, btnGem, btnExt].forEach(b => {
-                b.className = "w-full text-left px-4 py-3 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all";
+                b.className = "w-full text-left px-2 py-2 rounded-xl bg-white text-gray-400 font-bold text-xs uppercase tracking-widest border border-transparent hover:bg-gold-light/50 transition-all";
             });
 
             const activeBtn = sub === 'inventory' ? btnInv : sub === 'transactions' ? btnTrans : sub === 'geminfo' ? btnGem : btnExt;
             const activeColor = sub === 'transactions' ? 'text-green-700 bg-green-50 border-green-200' : 'text-[#D4AF37] bg-gold-light border-gold-border';
-            activeBtn.className = `w-full text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest border ${activeColor}`;
+            activeBtn.className = `w-full text-left px-2 py-2 rounded-xl font-bold text-xs uppercase tracking-widest border ${activeColor}`;
         };
 
         window.renderGemInfoAccordions = () => {
@@ -664,12 +663,12 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = "accordion-item border border-gold-border rounded-xl overflow-hidden bg-white shadow-sm";
                 itemDiv.innerHTML = `
-                    <button class="w-full px-6 py-4 flex justify-between items-center bg-[#F9F6EE] hover:bg-gold-light/50 transition-colors" onclick="toggleAccordion(this)">
+                    <button class="w-full px-3 py-2 flex justify-between items-center bg-[#F9F6EE] hover:bg-gold-light/50 transition-colors" onclick="toggleAccordion(this)">
                         <span class="text-sm font-bold text-gray-800 uppercase tracking-widest">${category}</span>
                         <svg class="accordion-icon w-4 h-4 text-[#D4AF37] transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div class="accordion-content">
-                        <div class="p-6 space-y-4">
+                        <div class="p-3 space-y-2">
                             <div class="flex gap-2">
                                 <input type="text" placeholder="Add new ${category.toLowerCase()}..." class="flex-1 px-3 py-2 border border-gold-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-[#D4AF37]">
                                 <button onclick="addGemInfoValue('${category}', this.previousElementSibling)" class="px-4 py-2 bg-[#D4AF37] text-white rounded-lg text-xs font-bold uppercase">Add</button>
@@ -1182,7 +1181,7 @@
                             <span class="text-[9px] text-gray-400 uppercase">${t.type || 'Standard'} • ${t.weight || '0'} CT</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-center font-black text-gray-600 data-cell">Qty: ${t.quantity || 0} - Sold for: ${t.totalValue}</td>
+                    <td class="px-4 py-3 text-center font-black text-gray-600 data-cell">Qty: ${t.quantity || 0} - ${t.action === 'SELL' ? 'Sold' : 'Bought'} for: ${t.totalValue}</td>
                     <td class="px-8 py-3 text-center data-cell sm:text-center">
                         <div class="stock-badge-mobile inline-flex flex-col sm:items-end">
                             <span class="font-bold text-[#C5A059]">${t.action}</span>
@@ -1239,23 +1238,79 @@
             XLSX.writeFile(wb, "Nawarat_Stock.xlsx");
         };
 
-        const importInput = document.getElementById('import-excel');
-        if (importInput) {
-            importInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (evt) => {
-                    const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
-                    const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                    for (const row of data) {
-                        await addDoc(collection(db, ...STOCK_PATH), { ...row, updatedAt: serverTimestamp() });
-                    }
-                    alert('Import Complete');
-                };
-                reader.readAsBinaryString(file);
-            });
-        }
+        document.getElementById('import-excel').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const status = document.getElementById('import-status');
+            const progress = document.getElementById('import-progress');
+            const message = document.getElementById('import-message');
+            status.classList.remove('hidden');
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
+                const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                const today = new Date().toISOString().split('T')[0];
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    let pDate = row.purchaseDate ? (row.purchaseDate instanceof Date ? row.purchaseDate.toISOString().split('T')[0] : String(row.purchaseDate)) : today;
+                    const lotName = String(row.lotName || 'Imported Lot').trim();
+                    await setDoc(doc(db, ...STOCK_PATH, lotName), {
+                        lotName: String(row.lotName || 'Imported Lot'),
+                        type: String(row.type || 'Standard'),
+                        quantity: parseInt(row.quantity || 0),
+                        weight: String(row.weight || '0'),
+                        color: String(row.color || 'Standard Grade'),
+                        buyingCurrency: String(row.buyingCurrency || 'THB'),
+                        buyingPrice: parseFloat(row.buyingPrice || 0),
+                        purchaseDate: pDate,
+                        share: String(row.share || '100%'),
+                        notes: String(row.notes || ''),
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                    const itemStub = {
+                        lotName: String(row.lotName || 'Unnamed Lot'),
+                        type: String(row.type || 'Standard'),
+                        weight: String(row.weight || '0'),
+                        color: String(row.color || '')
+                    };
+                    await logTransaction("BUY", itemStub, parseInt(row.quantity || 1), String(row.buyingCurrency || 'THB'), row.buyingPrice || 0, pDate, row.share || '100%', row.originalCost || 0);
+                    progress.style.width = `${Math.round(((i + 1) / data.length) * 100)}%`;
+                    message.innerText = `Importing Inventory: ${i + 1} / ${data.length}`;
+                }
+                message.innerText = `Success: ${data.length} items imported.`;
+            };
+            reader.readAsBinaryString(file);
+        });
+
+        document.getElementById('import-trans-excel').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const status = document.getElementById('import-trans-status');
+            const progress = document.getElementById('import-trans-progress');
+            const message = document.getElementById('import-trans-message');
+            status.classList.remove('hidden');
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                const wb = XLSX.read(evt.target.result, { type: 'binary', cellDates: true });
+                const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    const action = (row.action || "SELL").toUpperCase();
+                    const sDate = row.saleDate ? (row.saleDate instanceof Date ? row.saleDate : new Date(row.saleDate)) : new Date();
+                    const itemStub = {
+                        lotName: String(row.lotName || 'Unnamed Lot'),
+                        type: String(row.type || 'Standard'),
+                        weight: String(row.weight || '0'),
+                        color: String(row.color || '')
+                    };
+                    await logTransaction(action, itemStub, parseInt(row.quantity || 1), "THB", row.salePrice || 0, sDate, row.share || '100%', row.originalCost || 0);
+                    progress.style.width = `${Math.round(((i + 1) / data.length) * 100)}%`;
+                    message.innerText = `Importing History: ${i + 1} / ${data.length}`;
+                }
+                message.innerText = `Success: ${data.length} transactions recorded.`;
+            };
+            reader.readAsBinaryString(file);
+        });
     </script>
 </body>
 </html>
