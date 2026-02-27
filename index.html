@@ -1101,6 +1101,8 @@
                 logTransaction('BUY', data, data.quantity, data.buyingCurrency, data.buyingPrice, null, data.share);
             }
             closeModal();
+            resetStockPage();
+            renderStockView();
         };
 
         window.deleteLot = async () => {
@@ -1108,6 +1110,7 @@
             if (id && confirm('Delete this lot permanently?')) {
                 await deleteDoc(doc(db, ...STOCK_PATH, id));
                 closeModal();
+                clearSearch();
             }
         };
 
@@ -1136,6 +1139,8 @@
             else await updateDoc(stockDoc, { quantity: item.quantity - qty });
             logTransaction('SELL', item, qty, currency, price, null, shareInput, shareCost);
             closeSellModal();
+            resetStockPage();
+            renderStockView();
         };
 
         async function logTransaction(action, item, qty, currency, price, manualTimestamp = null, shareVal = '100%', originalCost = 0) {
