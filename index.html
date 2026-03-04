@@ -138,9 +138,8 @@
                         <thead class="bg-[#F9F6EE] border-b border-gold-border hide-on-mobile">
                             <tr>
                                 <th class="px-4 py-1 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Lot No. / Gemstone</th>
-                                <th class="px-4 py-1 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Weight & Color</th>
-                                <th class="px-4 py-1 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Cut & Shape</th>
-                                <th class="px-4 py-1 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Purchased</th>
+                                <th class="px-4 py-1 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Carat & Color</th>
+                                <th class="px-4 py-1 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Buy Price</th>
                                 <th class="px-4 py-1 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Status & Availability</th>
                                 <th class="px-4 py-1 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Actions</th>
                             </tr>
@@ -395,7 +394,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-1">
                     <div class="grid grid-cols-2 gap-2">
                         <div class="space-y-1">
-                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Identification (Lot Name)</label>
+                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Lot No.</label>
                             <input type="text" id="lotName" required class="w-full px-2 py-2 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all">
                         </div>
                         <div class="space-y-1">
@@ -405,7 +404,7 @@
                         </div>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Gemstone Variety</label>
+                        <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Gemstone</label>
                         <input type="text" id="type" list="type-suggestions" required placeholder="Select variety..." class="w-full px-2 py-2 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
                         <datalist id="type-suggestions"></datalist>
                     </div>
@@ -421,12 +420,12 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div class="space-y-1">
-                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Color / Clarity Grade</label>
+                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Color</label>
                             <input type="text" id="color" list="color-suggestions" placeholder="Select color grade..." class="w-full px-2 py-2 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
                             <datalist id="color-suggestions"></datalist>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Cut Style</label>
+                            <label class="text-[9px] font-bold uppercase text-[#D4AF37] tracking-[0.2em]">Cut</label>
                             <input type="text" id="cut" list="cut-suggestions" placeholder="Select cut style..." class="w-full px-2 py-2 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none">
                             <datalist id="cut-suggestions"></datalist>
                         </div>
@@ -789,9 +788,8 @@
                                 <div items-center" onclick="openModal('edit', '${item.id}')">
                                     <p class="max-sm:text-[10px] text-[12px] font-semibold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest mb-1">${item.type || 'Standard'}</p>
                                     <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-700">${item.weight || '0'} CT</p>
-                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-800">${formatDate(item.purchaseDate)}</p>
+                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</p>
                                     <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-500">${item.color || 'Standard Grade'}</p>
-                                    <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-700">${item.cut || 'None'} • ${item.shape || 'None'}</p>
                                     <p class="max-sm:text-[10px] text-[12px] font-semibold text-gray-800 mb-2">Stock: ${item.quantity} • ${item.status || 'N/A'}</p>
                                     <button onclick="event.stopPropagation(); openSellModal('${item.id}')" class="flex-1 sm:flex-none px-3 py-1 gold-border-std-2 text-[#C5A059] text-[10px] font-bold rounded-lg uppercase tracking-widest hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
                                 </div>
@@ -874,8 +872,7 @@
                             <tr>
                                 <th class="px-4 py-2 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Lot No. / Gemstone</th>
                                 <th class="px-4 py-2 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Weight & Color</th>
-                                <th class="px-4 py-2 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Cut & Shape</th>
-                                <th class="px-4 py-2 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Purchased</th>
+                                <th class="px-4 py-2 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em]">Buy Price</th>
                                 <th class="px-4 py-2 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em] text-center">Status & Availability</th>
                                 <th class="px-4 py-2 text-[10px] font-bold text-[#B8860B] uppercase tracking-[0.2em] text-right">Actions</th>
                             </tr>
@@ -938,34 +935,30 @@
                 row.innerHTML = `
                     <td class="px-4 py-2 data-cell">
                         <span class="mobile-label">Identity</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-bold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest">${item.type || 'Standard'}</span>
-                            <span class="text-gray-900 text-[9px] sm:text-[9px]">${item.lotName || 'Unnamed'}</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-[11px] font-bold text-[#B8860B] bg-[#FDF7E2] px-1 py-0.5 rounded uppercase tracking-widest">${item.lotName || 'Unnamed'}</span>
+                            <span class="text-gray-900 text-[11px] sm:text-[10px]">${item.type || 'Standard'}</span>
                         </div>
                     </td>
                     <td class="px-4 py-2 data-cell">
                         <span class="mobile-label">Gem Details</span>
-                        <div class="flex items-center gap-2 text-xs"><span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-400">CT</span></span><span class="text-[10px] text-gray-500">${item.color || 'Standard Grade'}</span></div></td>
-                    <td class="px-4 py-2 data-cell">
-                        <span class="mobile-label">Cut/Shape</span>
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="font-semibold text-gray-700">${item.cut || 'None'} </span>
-                            <span class="text-[10px] text-gray-500">${item.shape || 'None'}</span>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="font-semibold text-gray-700">${item.weight || '0'} <span class="text-[10px] text-gray-700">CT</span></span>
+                            <span class="text-[11px] text-gray-700">${item.color || 'Standard Grade'}</span>
                         </div>
                     </td>
                     <td class="px-4 py-2 data-cell">
                         <span class="mobile-label">Purchased</span>
-                        <div class="flex items-center gap-2 text-xs">
+                        <div class="flex items-center gap-2 text-[11px]">
                             <span class="font-semibold text-gray-800">${item.buyingCurrency || 'THB'} ${Number(item.buyingPrice).toLocaleString()}</span>
-                            <span class="text-[9px] text-gray-400">${formatDate(item.purchaseDate)}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-2 data-cell sm:text-center">
+                    <td class="px-4 py-1 data-cell sm:text-center">
                         <div class="stock-badge-mobile inline-flex flex-col sm:items-end">
-                            <span class="text-xl font-black text-gray-900">${item.quantity}</span>
-                            <span class="text-[10px] text-gray-400 mb-2">${item.status || 'N/A'}</span>
+                            <span class="text-l font-black text-gray-900">${item.quantity}</span>
+                            <span class="text-[10px] text-gray-400 mb-1">${item.status || 'N/A'}</span>
                             <span class="flex sm:justify-end items-center">
-                                <button onclick="openSellModal('${item.id}')" class="md:hidden px-3 py-2.5 gold-border-std-2 text-[#C5A059] text-white text-[11px] font-bold rounded-lg uppercase tracking-wider hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
+                                <button onclick="openSellModal('${item.id}')" class="md:hidden px-3 py-1 gold-border-std-2 text-[#C5A059] text-white text-[9px] font-bold rounded-lg uppercase tracking-wider hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">Sale</button>
                             </span>
                         </div>
                     </td>
@@ -1283,7 +1276,13 @@
                         buyingCurrency: String(row.buyingCurrency || 'THB'),
                         buyingPrice: parseFloat(row.buyingPrice || 0),
                         purchaseDate: pDate,
-                        share: String(row.share || '100%'),
+                        cut: String(row.cut || 'Standard Grade'),
+                        shape: String(row.shape || 'Standard Grade'),
+                        country: String(row.country || 'Standard Grade'),
+                        status: String(row.status || 'Standard Grade'),
+                        cert: String(row.cert || 'Standard Grade'),
+                        classification: String(row.classification || 'Standard Grade'),
+                        share: String(row.share),
                         notes: String(row.notes || ''),
                         updatedAt: serverTimestamp()
                     }, { merge: true });
