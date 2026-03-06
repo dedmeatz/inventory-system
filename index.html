@@ -42,7 +42,6 @@
                 <nav class="flex w-full sm:w-auto justify-center sm:justify-end mt-4 sm:mt-0 gap-8 overflow-x-auto no-scrollbar">
                     <button onclick="switchTab('list')" id="tab-list" class="py-2 text-[10px] font-bold transition-all tab-active uppercase tracking-widest whitespace-nowrap">Stock</button>
                     <button onclick="switchTab('transactions')" id="tab-transactions" class="py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap">Transactions</button>
-                    <!-- <button onclick="switchTab('financials')" id="tab-financials" class="py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap">Financials</button> -->
                     <button onclick="switchTab('admin')" id="tab-admin" class="py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap">Admin</button>
                 </nav>
             </div>
@@ -156,17 +155,17 @@
 
         <!-- Tab: Transactions View -->
         <div id="view-transactions" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
                 <div class="relative">
                     <input type="text" id="trans-search" oninput="resetTransPage(); renderTransactions()" placeholder="Search lot number..." class="w-full pl-4 pr-4 py-3 border border-gold-border rounded-xl focus:ring-1 focus:ring-[#D4AF37] outline-none text-sm bg-white shadow-sm">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <select id="trans-filter-action" onchange="resetTransPage(); renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="trans-filter-action" onchange="resetTransPage(); renderTransactions()" class="px-2 py-3 border border-gold-border rounded-xl bg-white text-xs shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                         <option value="">All Actions (Buy/Sell)</option>
                         <option value="BUY">Purchases (BUY)</option>
                         <option value="SELL">Sales (SELL)</option>
                     </select>
-                    <select id="trans-filter-date" onchange="resetTransPage(); renderTransactions()" class="px-4 py-3 border border-gold-border rounded-xl bg-white text-sm shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
+                    <select id="trans-filter-date" onchange="resetTransPage(); renderTransactions()" class="px-2 py-3 border border-gold-border rounded-xl bg-white text-xs shadow-sm focus:ring-1 focus:ring-[#D4AF37]">
                         <option value="all">All Time</option>
                         <option value="today">Today</option>
                         <option value="yesterday">Yesterday</option>
@@ -180,7 +179,7 @@
             </div>
 
             <div class="gold-card rounded-2xl shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-gold-border bg-[#F9F6EE] hidden sm:flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                <div class="p-3 border-b border-gold-border bg-[#F9F6EE] hidden sm:flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                     <div>
                         <h2 class="text-xl font-bold text-gray-900">Transaction Registry</h2>
                     </div>
@@ -189,95 +188,16 @@
                     <table class="w-full text-left text-sm">
                         <thead class="bg-[#F9F6EE] text-[#B8860B] uppercase text-[9px] font-bold tracking-widest hide-on-mobile">
                             <tr>
-                                <th class="px-8 py-4">Date & Time</th>
-                                <th class="px-8 py-4">Lot Name / Details</th>
-                                <th class="px-8 py-4 text-center">Qty - Txn Value</th>
-                                <th class="px-8 py-4 text-center">Action</th>
+                                <th class="px-8 py-2">Date & Time</th>
+                                <th class="px-8 py-2">Lot Name / Details</th>
+                                <th class="px-8 py-2 text-center">Qty - Txn Value</th>
+                                <th class="px-6 py-2 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody id="transaction-body" class="divide-y divide-[#FDF7E2]"></tbody>
                     </table>
                 </div>
                 <div id="trans-pagination" class="pagination-container border-t border-gold-border bg-[#F9F6EE]/30 px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"></div>
-            </div>
-        </div>
-
-        <!-- Tab: Financials View -->
-        <div id="view-financials" class="hidden space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="gold-card rounded-2xl p-6 shadow-sm border-l-4 border-green-500">
-                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Share Sales</h3>
-                    <p id="fin-total-sales" class="text-2xl font-black text-gray-900">THB 0</p>
-                    <p class="text-[9px] text-gray-400 mt-1 uppercase">Adjusted by your share %</p>
-                </div>
-                <div class="gold-card rounded-2xl p-6 shadow-sm border-l-4 border-blue-500">
-                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Inventory Share Cost</h3>
-                    <p id="fin-total-cost" class="text-2xl font-black text-gray-900">THB 0</p>
-                    <p class="text-[9px] text-gray-400 mt-1 uppercase">Attributed cost of sold items</p>
-                </div>
-                <div id="fin-profit-card" class="gold-card rounded-2xl p-6 shadow-sm border-l-4">
-                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Net Profit/Loss</h3>
-                    <p id="fin-net-profit" class="text-2xl font-black">THB 0</p>
-                    <p id="fin-profit-label" class="text-[9px] mt-1 uppercase font-bold tracking-wider">Calculated realized gain</p>
-                </div>
-            </div>
-
-            <div class="gold-card rounded-2xl p-8 shadow-sm">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900">Inventory Valuation</h2>
-                        <p class="text-[10px] text-[#D4AF37] font-bold uppercase tracking-widest mt-1">Current Book Value of Vault</p>
-                    </div>
-                    <div class="text-right">
-                        <p id="fin-asset-value" class="text-3xl font-black text-[#D4AF37]">THB 0</p>
-                        <p class="text-[9px] text-gray-400 uppercase tracking-widest">Total Asset Principal</p>
-                    </div>
-                </div>
-                <div class="p-4 bg-gold-light/30 border border-gold-border rounded-xl">
-                    <p class="text-xs text-gray-600 leading-relaxed italic">
-                        The current asset value is calculated based on the <b>original purchase price</b> of all items currently in stock. This represents the total capital tied up in the vault across all currencies (normalized to THB).
-                    </p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="gold-card rounded-2xl p-8 shadow-sm">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6">Turnover Rate</h2>
-                    <div id="turnover-container" class="space-y-4"></div>
-                </div>
-
-                <div class="gold-card rounded-2xl p-8 shadow-sm">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6">Aging Analysis</h2>
-                    <div class="space-y-6">
-                        <div>
-                            <div class="flex justify-between items-end mb-2">
-                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Current Stock (0-6 Months)</span>
-                                <span id="age-new-val" class="text-sm font-bold text-green-600">THB 0</span>
-                            </div>
-                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                <div id="age-new-bar" class="bg-green-500 h-full transition-all duration-1000" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-end mb-2">
-                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Aged Stock (6-12 Months)</span>
-                                <span id="age-mid-val" class="text-sm font-bold text-orange-400">THB 0</span>
-                            </div>
-                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                <div id="age-mid-bar" class="bg-orange-400 h-full transition-all duration-1000" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-end mb-2">
-                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Dormant Capital (12+ Months)</span>
-                                <span id="age-old-val" class="text-sm font-bold text-red-600">THB 0</span>
-                            </div>
-                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                <div id="age-old-bar" class="bg-red-600 h-full transition-all duration-1000" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -572,7 +492,6 @@
                     stock = s.docs.map(d => ({ id: d.id, ...d.data() }));
                     renderStock();
                     updateFilters();
-                    calculateFinancials();
                     document.getElementById('loading-screen').classList.add('hidden');
                     adjustFiltersForMobile();
                 }, (err) => console.error(err));
@@ -581,7 +500,6 @@
                     transactions = s.docs.map(d => ({ id: d.id, ...d.data() }));
                     transactions.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                     renderTransactions();
-                    calculateFinancials();
                 }, (err) => console.error(err));
 
                 onSnapshot(doc(db, ...GEMINFO_PATH, 'registry'), async (s) => {
@@ -602,17 +520,15 @@
         window.switchTab = (tab) => {
             document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
             document.getElementById('view-transactions').classList.toggle('hidden', tab !== 'transactions');
-            document.getElementById('view-financials').classList.toggle('hidden', tab !== 'financials');
             document.getElementById('view-admin').classList.toggle('hidden', tab !== 'admin');
             
             const mobileFilterTrigger = document.getElementById('mobile-filter-trigger');
             if (mobileFilterTrigger) mobileFilterTrigger.style.display = (tab === 'list') ? 'block' : 'none';
 
-            ['list', 'transactions', 'financials', 'admin'].forEach(t => {
+            ['list', 'transactions', 'admin'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 if (btn) btn.className = tab === t ? 'py-2 text-[10px] font-bold transition-all tab-active uppercase tracking-widest whitespace-nowrap' : 'py-2 text-[10px] font-bold transition-all text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest whitespace-nowrap';
             });
-            if (tab === 'financials') calculateFinancials();
         };
 
         window.toggleMobileFilter = () => {
@@ -1209,29 +1125,6 @@
             if (match) return parseInt(match[1]) / 100;
             return 1.0;
         }
-
-        window.calculateFinancials = () => {
-            let shareSales = 0, shareCost = 0, currentAssetValue = 0;
-            transactions.forEach(t => {
-                if (t.action === 'SELL') {
-                    const originalItem = stock.find(s => s.lotName === t.lotName);
-                    const unitPurchasePrice = t.originalCost ? (t.originalCost / t.quantity) : (originalItem ? (originalItem.buyingPrice / originalItem.quantity) : 0);
-                    const sharePerc = parseShare(t.share);
-                    shareSales += (t.price || 0) * sharePerc;
-                    shareCost += (unitPurchasePrice * (t.quantity || 0)) * sharePerc;
-                }
-            });
-            stock.forEach(s => { currentAssetValue += parseFloat(s.buyingPrice || 0); });
-            if (document.getElementById('fin-total-sales')) document.getElementById('fin-total-sales').innerText = `THB ${shareSales.toLocaleString()}`;
-            if (document.getElementById('fin-total-cost')) document.getElementById('fin-total-cost').innerText = `THB ${shareCost.toLocaleString()}`;
-            if (document.getElementById('fin-asset-value')) document.getElementById('fin-asset-value').innerText = `THB ${currentAssetValue.toLocaleString()}`;
-            const profit = shareSales - shareCost;
-            const profitEl = document.getElementById('fin-net-profit');
-            if (profitEl) {
-                profitEl.innerText = `THB ${profit.toLocaleString()}`;
-                profitEl.className = `text-2xl font-black ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`;
-            }
-        };
 
         window.extractTransactions = () => {
             if (transactions.length === 0) return;
